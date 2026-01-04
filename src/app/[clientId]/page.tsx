@@ -34,7 +34,7 @@ export default async function ClientPage({ params }: PageProps) {
             <div className="absolute inset-0 bg-black/30" />
 
             <div className="relative z-10 w-full flex justify-center p-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300 fill-mode-both">
-                <WiFiCard credentials={credentials} clientId={clientId} />
+                <WiFiCard credentials={credentials} />
             </div>
         </main>
     );

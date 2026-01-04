@@ -27,7 +27,9 @@ export default function WiFiCard({ credentials }: WiFiCardProps) {
         return () => clearTimeout(timer);
     }, []);
 
-    const wifiString = `WIFI:S:${credentials.ssid};P:${credentials.password};T:${credentials.securityType || 'WPA'};;`;
+    const ssid = credentials.ssid || 'AuraTap Guest';
+    const password = credentials.password || '';
+    const wifiString = `WIFI:S:${ssid};P:${password};T:${credentials.securityType || 'WPA'};;`;
 
     const handleConnect = () => {
         if (!isIos) {
@@ -81,7 +83,7 @@ export default function WiFiCard({ credentials }: WiFiCardProps) {
             </div>
 
             <h1 className="text-3xl font-light tracking-widest text-white mb-2 font-sans uppercase">
-                {credentials.ssid}
+                {credentials.ssid || 'AURATAP'}
             </h1>
             <p className="text-white/60 text-[10px] tracking-[0.3em] uppercase mb-8">
                 {credentials.venueType || 'Premium'} Guest Network
@@ -122,16 +124,18 @@ export default function WiFiCard({ credentials }: WiFiCardProps) {
             <div className="space-y-4">
                 <button
                     onClick={handleConnect}
+                    disabled={!credentials.ssid}
                     className={`
                         flex items-center justify-center gap-3 group overflow-hidden relative
                         w-full py-4 px-6 rounded-2xl font-bold text-lg tracking-wide transition-all duration-300 active:scale-95
                         ${status === 'idle'
-                            ? 'bg-white text-black hover:bg-neutral-200 shadow-2xl hover:shadow-white/20'
+                            ? (credentials.ssid ? 'bg-white text-black hover:bg-neutral-200 shadow-2xl hover:shadow-white/20' : 'bg-neutral-800 text-neutral-500 cursor-not-allowed')
                             : 'bg-green-500 text-white shadow-green-500/50'}
                     `}
                 >
                     <span className="relative z-10">
-                        {status === 'idle' && (isIos ? 'Join Wi-Fi' : 'Connect Now')}
+                        {!credentials.ssid && 'AuraTap Offline'}
+                        {credentials.ssid && status === 'idle' && (isIos ? 'Join Wi-Fi' : 'Connect Now')}
                         {status === 'copying' && 'Ready to Paste'}
                         {status === 'connected' && 'Connecting...'}
                     </span>

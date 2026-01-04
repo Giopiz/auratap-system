@@ -44,38 +44,56 @@ async function getPreferredSheet(doc: GoogleSpreadsheet) {
     return doc.sheetsByIndex[0];
 }
 
+function getRowValue(row: GoogleSpreadsheetRow, key: string): string {
+    const rawData = row.toObject();
+    const normalizedKey = key.toLowerCase();
+
+    // Check for exact match first
+    const exactMatch = row.get(key);
+    if (exactMatch !== undefined) return exactMatch;
+
+    // Fallback to case-insensitive search
+    for (const [header, value] of Object.entries(rawData)) {
+        if (header.toLowerCase() === normalizedKey) {
+            return String(value);
+        }
+    }
+    return '';
+}
+
 export async function fetchSheetData(clientId?: string) {
     try {
         const doc = await getDoc();
         const sheet = await getPreferredSheet(doc);
         const rows = await sheet.getRows();
+        console.log(`[Sheets Server] Reading from "${sheet.title}". Headers:`, sheet.headerValues.join(', '));
 
         if (clientId) {
-            const row = rows.find((r: GoogleSpreadsheetRow) => r.get('clientId') === clientId);
+            const row = rows.find((r: GoogleSpreadsheetRow) => getRowValue(r, 'clientId') === clientId);
             if (!row) return null;
 
             return {
-                ssid: row.get('ssid'),
-                password: row.get('password'),
-                securityType: row.get('securityType') || 'WPA',
-                theme: row.get('theme') || 'marble',
-                venueType: row.get('venueType') || 'cafe',
-                ownerEmail: row.get('ownerEmail') || '',
-                lat: parseFloat(row.get('lat')) || null,
-                lng: parseFloat(row.get('lng')) || null,
+                ssid: getRowValue(row, 'ssid'),
+                password: getRowValue(row, 'password'),
+                securityType: getRowValue(row, 'securityType') || 'WPA',
+                theme: getRowValue(row, 'theme') || 'marble',
+                venueType: getRowValue(row, 'venueType') || 'cafe',
+                ownerEmail: getRowValue(row, 'ownerEmail') || '',
+                lat: parseFloat(getRowValue(row, 'lat')) || null,
+                lng: parseFloat(getRowValue(row, 'lng')) || null,
             };
         }
 
         return rows.map((row: GoogleSpreadsheetRow) => ({
-            clientId: row.get('clientId'),
-            ssid: row.get('ssid'),
-            password: row.get('password'),
-            securityType: row.get('securityType') || 'WPA',
-            theme: row.get('theme') || 'marble',
-            venueType: row.get('venueType') || 'cafe',
-            ownerEmail: row.get('ownerEmail') || '',
-            lat: parseFloat(row.get('lat')) || null,
-            lng: parseFloat(row.get('lng')) || null,
+            clientId: getRowValue(row, 'clientId'),
+            ssid: getRowValue(row, 'ssid'),
+            password: getRowValue(row, 'password'),
+            securityType: getRowValue(row, 'securityType') || 'WPA',
+            theme: getRowValue(row, 'theme') || 'marble',
+            venueType: getRowValue(row, 'venueType') || 'cafe',
+            ownerEmail: getRowValue(row, 'ownerEmail') || '',
+            lat: parseFloat(getRowValue(row, 'lat')) || null,
+            lng: parseFloat(getRowValue(row, 'lng')) || null,
         }));
 
     } catch (error) {
@@ -137,8 +155,8 @@ export async function updateClientRecord(clientId: string, data: Partial<{
         const sheet = await getPreferredSheet(doc);
         const rows = await sheet.getRows();
 
-        const row = rows.find((r: GoogleSpreadsheetRow) => r.get('clientId') === clientId);
-        if (!row) throw new Error('Client not found');
+        const row = rows.find((r: GoogleSpreadsheetRow) => getRowValue(r, 'clientId') === clientId);
+        if (!row) throw new Error(`Client "${clientId}" not found in sheet "${sheet.title}"`);
 
         if (data.ssid !== undefined) row.set('ssid', data.ssid);
         if (data.password !== undefined) row.set('password', data.password);

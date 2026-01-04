@@ -14,9 +14,17 @@ export async function GET(request: NextRequest) {
         const nearest = await fetchNearestVenue(lat, lng);
 
         if (nearest) {
-            return NextResponse.json(nearest);
+            return NextResponse.json(nearest, {
+                headers: { 'x-discovery-info': `Found ${nearest.clientId}` }
+            });
         } else {
-            return NextResponse.json({ message: 'No venue found nearby' }, { status: 404 });
+            return NextResponse.json(
+                { message: 'No venue found nearby' },
+                {
+                    status: 404,
+                    headers: { 'x-discovery-info': 'No match within 500m' }
+                }
+            );
         }
     } catch (error) {
         console.error('[Discovery API Error]:', error);

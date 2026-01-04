@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 import { WifiCredentials } from '@/lib/wifi-service';
 import { fetchSheetData } from '@/lib/sheets-server';
 import WiFiCard from '@/components/WiFiCard';
-import { notFound } from 'next/navigation';
+import Link from 'next/link';
 
 interface PageProps {
     params: Promise<{
@@ -20,7 +20,7 @@ export default async function ClientPage({ params }: PageProps) {
             <main className="min-h-screen bg-black flex flex-col items-center justify-center p-8 text-center space-y-6">
                 <h1 className="text-2xl text-white font-light tracking-widest uppercase">AuraTap Service</h1>
                 <p className="text-white/40 text-sm max-w-xs">Connecting to this venue is currently unavailable. Please try again or visit the dashboard.</p>
-                <a href="/dashboard" className="px-6 py-3 bg-white/10 border border-white/20 rounded-xl text-white text-xs uppercase tracking-widest font-bold">Admin Dashboard</a>
+                <Link href="/dashboard" className="px-6 py-3 bg-white/10 border border-white/20 rounded-xl text-white text-xs uppercase tracking-widest font-bold">Admin Dashboard</Link>
             </main>
         );
     }

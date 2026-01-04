@@ -16,14 +16,14 @@ export async function GET(request: NextRequest) {
 
         if (nearest) {
             return NextResponse.json(nearest, {
-                headers: { 'x-discovery-info': `Found ${nearest.clientId}` }
+                headers: { 'x-discovery-info': `Found ${nearest.clientId} via Universal Search` }
             });
         } else {
             return NextResponse.json(
                 { message: 'No venue found nearby' },
                 {
                     status: 404,
-                    headers: { 'x-discovery-info': 'No match within 500m' }
+                    headers: { 'x-discovery-info': 'No match within 1km across all tabs' }
                 }
             );
         }

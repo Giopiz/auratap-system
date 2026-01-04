@@ -46,61 +46,87 @@ async function getPreferredSheet(doc: GoogleSpreadsheet) {
 
 function getRowValue(row: GoogleSpreadsheetRow, key: string): string {
     const rawData = row.toObject();
-    const normalizedKey = key.toLowerCase();
+    const normalizedKey = key.toLowerCase().trim();
+
+    // Define aliases for common fields
+    const aliases: Record<string, string[]> = {
+        lat: ['lat', 'latitude', 'lattitude', 'y'],
+        lng: ['lng', 'longitude', 'longtitude', 'long', 'x'],
+        clientid: ['clientid', 'client_id', 'id', 'user_id'],
+        ssid: ['ssid', 'wifi', 'wifi_name', 'network'],
+        password: ['password', 'pass', 'wifi_password', 'key'],
+    };
+
+    const searchKeys = aliases[normalizedKey] || [normalizedKey];
 
     // Check for exact match first
-    const exactMatch = row.get(key);
-    if (exactMatch !== undefined) return exactMatch;
+    for (const sKey of searchKeys) {
+        const value = row.get(sKey);
+        if (value !== undefined && value !== null && value !== '') return String(value).trim();
+    }
 
-    // Fallback to case-insensitive search
+    // Fallback to case-insensitive search across all headers
     for (const [header, value] of Object.entries(rawData)) {
-        if (header.toLowerCase() === normalizedKey) {
-            return String(value);
+        const normalizedHeader = header.toLowerCase().trim();
+        if (searchKeys.includes(normalizedHeader)) {
+            return String(value).trim();
         }
     }
     return '';
 }
 
 function parseCoordinate(val: string | number | null | undefined): number | null {
-    if (val === undefined || val === null || val === '') return null;
-    const num = parseFloat(String(val));
+    if (val === undefined || val === null) return null;
+    const strVal = String(val).trim();
+    if (strVal === '') return null;
+    const num = parseFloat(strVal);
     return isNaN(num) ? null : num;
+}
+
+function mapRowToVenue(row: GoogleSpreadsheetRow): WifiCredentials {
+    return {
+        clientId: getRowValue(row, 'clientId'),
+        ssid: getRowValue(row, 'ssid'),
+        password: getRowValue(row, 'password'),
+        securityType: (getRowValue(row, 'securityType') as 'WPA' | 'WEP' | 'nopass' | undefined) || 'WPA',
+        theme: (getRowValue(row, 'theme') as 'marble' | 'steel' | 'wood' | undefined) || 'marble',
+        venueType: getRowValue(row, 'venueType') || 'cafe',
+        ownerEmail: getRowValue(row, 'ownerEmail') || '',
+        lat: parseCoordinate(getRowValue(row, 'lat')),
+        lng: parseCoordinate(getRowValue(row, 'lng')),
+    };
 }
 
 export async function fetchSheetData(clientId?: string) {
     try {
         const doc = await getDoc();
-        const sheet = await getPreferredSheet(doc);
-        const rows = await sheet.getRows();
-        console.log(`[Sheets Server] Reading from "${sheet.title}". Headers:`, sheet.headerValues.join(', '));
 
         if (clientId) {
+            // Priority search for specific client
+            const sheet = await getPreferredSheet(doc);
+            const rows = await sheet.getRows();
             const row = rows.find((r: GoogleSpreadsheetRow) => getRowValue(r, 'clientId') === clientId);
-            if (!row) return null;
 
-            return {
-                ssid: getRowValue(row, 'ssid'),
-                password: getRowValue(row, 'password'),
-                securityType: getRowValue(row, 'securityType') || 'WPA',
-                theme: getRowValue(row, 'theme') || 'marble',
-                venueType: getRowValue(row, 'venueType') || 'cafe',
-                ownerEmail: getRowValue(row, 'ownerEmail') || '',
-                lat: parseCoordinate(getRowValue(row, 'lat')),
-                lng: parseCoordinate(getRowValue(row, 'lng')),
-            };
+            if (row) return mapRowToVenue(row);
+
+            // Fallback: Search ALL sheets for this clientId
+            console.log(`[Sheets Server] Client "${clientId}" not in preferred sheet. Searching all sheets...`);
+            for (const s of doc.sheetsByIndex) {
+                const sRows = await s.getRows();
+                const found = sRows.find((r: GoogleSpreadsheetRow) => getRowValue(r, 'clientId') === clientId);
+                if (found) return mapRowToVenue(found);
+            }
+            return null;
         }
 
-        return rows.map((row: GoogleSpreadsheetRow) => ({
-            clientId: getRowValue(row, 'clientId'),
-            ssid: getRowValue(row, 'ssid'),
-            password: getRowValue(row, 'password'),
-            securityType: getRowValue(row, 'securityType') || 'WPA',
-            theme: getRowValue(row, 'theme') || 'marble',
-            venueType: getRowValue(row, 'venueType') || 'cafe',
-            ownerEmail: getRowValue(row, 'ownerEmail') || '',
-            lat: parseCoordinate(getRowValue(row, 'lat')),
-            lng: parseCoordinate(getRowValue(row, 'lng')),
-        }));
+        // For discovery (no clientId): Scan ALL sheets and combine
+        let allVenues: WifiCredentials[] = [];
+        for (const s of doc.sheetsByIndex) {
+            const sRows = await s.getRows();
+            const mapped = sRows.map(mapRowToVenue).filter(v => v.ssid);
+            allVenues = [...allVenues, ...mapped];
+        }
+        return allVenues;
 
     } catch (error) {
         console.error('[Sheets Server Fetch Error]:', error);

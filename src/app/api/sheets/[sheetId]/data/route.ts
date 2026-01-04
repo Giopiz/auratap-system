@@ -65,10 +65,11 @@ export async function GET(
 
         return NextResponse.json(data);
 
-    } catch (error: any) {
-        console.error('[Sheets API Error]:', error.message);
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error('[Sheets API Error]:', errorMessage);
         return NextResponse.json(
-            { error: 'Failed to fetch from Google Sheets', details: error.message },
+            { error: 'Failed to fetch from Google Sheets', details: errorMessage },
             { status: 500 }
         );
     }

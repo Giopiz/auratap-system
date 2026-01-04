@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { WifiCredentials } from '@/lib/wifi-service';
 import { QRCodeCanvas } from 'qrcode.react';
 
@@ -11,21 +11,30 @@ interface WiFiCardProps {
 export default function WiFiCard({ credentials }: WiFiCardProps) {
     const [status, setStatus] = useState<'idle' | 'copying' | 'connected'>('idle');
     const [isIos, setIsIos] = useState(false);
+    const [qrImageData, setQrImageData] = useState<string>('');
+    const canvasRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const ua = window.navigator.userAgent;
         setIsIos(/iPhone|iPad|iPod/i.test(ua));
+
+        // Small delay to ensure canvas is rendered before grabbing image
+        const timer = setTimeout(() => {
+            const canvas = document.querySelector('canvas');
+            if (canvas) {
+                setQrImageData(canvas.toDataURL('image/png'));
+            }
+        }, 100);
+        return () => clearTimeout(timer);
     }, []);
 
     const wifiString = `WIFI:S:${credentials.ssid};P:${credentials.password};T:${credentials.securityType || 'WPA'};;`;
 
     const handleConnect = () => {
         if (!isIos) {
-            // Android/Desktop: Try direct URI
             window.location.href = wifiString;
             setStatus('connected');
         } else {
-            // iOS: Copy password as fallback/assistance
             navigator.clipboard.writeText(credentials.password || '');
             setStatus('copying');
             setTimeout(() => setStatus('idle'), 3000);
@@ -33,7 +42,7 @@ export default function WiFiCard({ credentials }: WiFiCardProps) {
     };
 
     return (
-        <div className="relative z-10 w-full max-w-md p-8 mx-4 overflow-hidden text-center transition-all duration-500 bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl hover:shadow-white/10 group">
+        <div className="relative z-10 w-full max-w-md p-8 mx-4 overflow-hidden text-center transition-all duration-500 bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl hover:shadow-white/10 group select-none">
             {/* Glossy overlay */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
@@ -52,17 +61,32 @@ export default function WiFiCard({ credentials }: WiFiCardProps) {
                     </p>
                 </div>
 
-                {/* Magic QR Code Container */}
-                <div className="relative inline-block p-4 bg-white rounded-2xl shadow-inner">
-                    <QRCodeCanvas
-                        value={wifiString}
-                        size={160}
-                        level="H"
-                        includeMargin={false}
-                        className="rounded-lg shadow-sm"
-                    />
+                {/* QR Container - Hidden Canvas, Visible Image */}
+                <div className="relative inline-block p-4 bg-white rounded-2xl shadow-inner overflow-hidden">
+                    {/* The Canvas is used just to generate the data, then hidden */}
+                    <div className="sr-only">
+                        <QRCodeCanvas
+                            value={wifiString}
+                            size={256}
+                            level="H"
+                            includeMargin={false}
+                        />
+                    </div>
+
+                    {/* The Image is what the iPhone user actually holds down on */}
+                    {qrImageData ? (
+                        <img
+                            src={qrImageData}
+                            alt="Scan to Connect"
+                            className="w-40 h-40 rounded-lg shadow-sm block pointer-events-auto"
+                            style={{ WebkitTouchCallout: 'default' }} // Explicitly allow Safari system menu
+                        />
+                    ) : (
+                        <div className="w-40 h-40 bg-neutral-200 animate-pulse rounded-lg" />
+                    )}
+
                     {isIos && (
-                        <div className="absolute -bottom-2 -right-2 bg-blue-500 text-white p-1.5 rounded-full shadow-lg border-2 border-white animate-bounce">
+                        <div className="absolute -bottom-2 -right-2 bg-blue-500 text-white p-1.5 rounded-full shadow-lg border-2 border-white animate-bounce pointer-events-none">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5" />
                             </svg>

@@ -80,13 +80,14 @@ export async function addClientRecord(data: { clientId: string; ssid?: string; p
 
         console.log('[Sheets Server] Successfully added client to sheet.');
         return true;
-    } catch (error: any) {
-        console.error('[Sheets Server Add Error]:', error?.message || error);
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error('[Sheets Server Add Error]:', message);
         // Provide a cleaner error message for the UI
-        if (error?.message?.includes('duplicate')) {
+        if (message.includes('duplicate')) {
             throw new Error('This Client ID already exists in the sheet.');
         }
-        throw new Error(`Google Sheets Error: ${error?.message || 'Check your sheet headers'}`);
+        throw new Error(`Google Sheets Error: ${message || 'Check your sheet headers'}`);
     }
 }
 

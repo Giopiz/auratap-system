@@ -32,7 +32,7 @@ async function getDoc() {
     return doc;
 }
 
-async function getPreferredSheet(doc: any) {
+async function getPreferredSheet(doc: GoogleSpreadsheet) {
     // Priority 1: A sheet named "LOCATION" (User's specific request)
     // Priority 2: A sheet named "Clients" (Legacy/Standard)
     // Priority 3: The first sheet (Fallback)

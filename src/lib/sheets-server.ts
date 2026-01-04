@@ -207,13 +207,21 @@ export async function updateClientRecord(clientId: string, data: Partial<{
 }
 
 /**
- * Discovery Engine: Finds the nearest venue based on lat/lng
+ * Discovery Engine: Finds the nearest venue based on lat/lng with diagnostic metadata
  */
 export async function fetchNearestVenue(userLat: number, userLng: number) {
     const venues = await fetchSheetData() as WifiCredentials[];
+
+    const diagnostics = {
+        totalVenuesScanned: venues ? venues.length : 0,
+        closestDistanceDeg: Infinity as number,
+        closestVenueId: 'NONE' as string,
+        radiusUsedKm: 1,
+    };
+
     if (!venues || venues.length === 0) {
         console.log('[Discovery] No venues found in sheet.');
-        return null;
+        return { nearest: null, diagnostics };
     }
 
     let nearest: WifiCredentials | null = null;
@@ -235,6 +243,8 @@ export async function fetchNearestVenue(userLat: number, userLng: number) {
             if (distance < minDistance) {
                 minDistance = distance;
                 nearest = venue;
+                diagnostics.closestDistanceDeg = distance;
+                diagnostics.closestVenueId = venue.clientId || 'unknown';
             }
         }
     }
@@ -242,5 +252,6 @@ export async function fetchNearestVenue(userLat: number, userLng: number) {
     console.log(`[Discovery] Nearest Venue: ${nearest?.clientId || 'NONE'} | Min Dist: ${minDistance === Infinity ? '0' : minDistance.toFixed(6)}`);
 
     // Only return if within ~1km (approx 0.01 degrees)
-    return minDistance < 0.01 ? nearest : null;
+    const result = minDistance < 0.01 ? nearest : null;
+    return { nearest: result, diagnostics };
 }

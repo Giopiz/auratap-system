@@ -12,18 +12,27 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-        const nearest = await fetchNearestVenue(lat, lng);
+        const { nearest, diagnostics } = await fetchNearestVenue(lat, lng);
 
         if (nearest) {
             return NextResponse.json(nearest, {
-                headers: { 'x-discovery-info': `Found ${nearest.clientId} via Universal Search` }
+                headers: {
+                    'x-discovery-info': `Found ${nearest.clientId} via Universal Search`,
+                    'x-discovery-debug': JSON.stringify(diagnostics)
+                }
             });
         } else {
             return NextResponse.json(
-                { message: 'No venue found nearby' },
+                {
+                    message: 'No venue found nearby',
+                    diagnostics
+                },
                 {
                     status: 404,
-                    headers: { 'x-discovery-info': 'No match within 1km across all tabs' }
+                    headers: {
+                        'x-discovery-info': 'No match across any tabs',
+                        'x-discovery-debug': JSON.stringify(diagnostics)
+                    }
                 }
             );
         }

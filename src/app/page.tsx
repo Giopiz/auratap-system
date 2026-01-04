@@ -24,13 +24,20 @@ export default function Home() {
         const { latitude, longitude } = position.coords;
         try {
           const res = await fetch(`/api/discover?lat=${latitude}&lng=${longitude}`);
+          const data = await res.json();
+
           if (res.ok) {
-            const data = await res.json();
             setVenue(data);
           } else {
-            setError(`No AuraTap venue found nearby (${latitude.toFixed(4)}, ${longitude.toFixed(4)}). Radius: 1km.`);
+            const diags = data.diagnostics || {};
+            const dist = diags.closestDistanceDeg !== Infinity
+              ? `Closest: ${diags.closestVenueId} at ${diags.closestDistanceDeg.toFixed(4)}°`
+              : "No coordinates found in sheet";
+
+            setError(`Discovery Failed. Scanned ${diags.totalVenuesScanned || 0} venues. ${dist}. Current: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}.`);
           }
-        } catch {
+        } catch (err) {
+          console.error('[Discovery UI Error]:', err);
           setError("Unable to connect to AuraTap Discovery.");
         } finally {
           setLoading(false);

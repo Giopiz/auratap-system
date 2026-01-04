@@ -3,9 +3,9 @@ import WiFiCard from '@/components/WiFiCard';
 import { notFound } from 'next/navigation';
 
 interface PageProps {
-    params: {
+    params: Promise<{
         clientId: string;
-    };
+    }>;
 }
 
 export default async function ClientPage({ params }: PageProps) {

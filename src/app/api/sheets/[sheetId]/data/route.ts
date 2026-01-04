@@ -7,7 +7,7 @@ import path from 'path';
 // This route now talks DIRECTLY to Google Sheets, eliminating the need for a local MCP server.
 export async function GET(
     request: NextRequest,
-    { params }: { params: { sheetId: string } }
+    { params }: { params: Promise<{ sheetId: string }> }
 ) {
     const { sheetId } = await params;
     const { searchParams } = request.nextUrl;

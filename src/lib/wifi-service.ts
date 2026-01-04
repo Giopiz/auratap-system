@@ -1,5 +1,6 @@
 
 export interface WifiCredentials {
+    clientId?: string;
     ssid: string;
     password?: string;
     securityType?: 'WPA' | 'WEP' | 'nopass';

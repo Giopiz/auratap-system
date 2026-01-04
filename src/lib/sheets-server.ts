@@ -1,4 +1,4 @@
-import { GoogleSpreadsheet } from 'google-spreadsheet';
+import { GoogleSpreadsheet, GoogleSpreadsheetRow } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
 import { WifiCredentials } from './wifi-service';
 import fs from 'fs';
@@ -32,14 +32,26 @@ async function getDoc() {
     return doc;
 }
 
+async function getPreferredSheet(doc: any) {
+    // Priority 1: A sheet named "LOCATION" (User's specific request)
+    // Priority 2: A sheet named "Clients" (Legacy/Standard)
+    // Priority 3: The first sheet (Fallback)
+    const preferredNames = ['LOCATION', 'Clients'];
+    for (const name of preferredNames) {
+        const sheet = doc.sheetsByTitle[name];
+        if (sheet) return sheet;
+    }
+    return doc.sheetsByIndex[0];
+}
+
 export async function fetchSheetData(clientId?: string) {
     try {
         const doc = await getDoc();
-        const sheet = doc.sheetsByIndex[0];
+        const sheet = await getPreferredSheet(doc);
         const rows = await sheet.getRows();
 
         if (clientId) {
-            const row = rows.find(r => r.get('clientId') === clientId);
+            const row = rows.find((r: GoogleSpreadsheetRow) => r.get('clientId') === clientId);
             if (!row) return null;
 
             return {
@@ -54,7 +66,7 @@ export async function fetchSheetData(clientId?: string) {
             };
         }
 
-        return rows.map(row => ({
+        return rows.map((row: GoogleSpreadsheetRow) => ({
             clientId: row.get('clientId'),
             ssid: row.get('ssid'),
             password: row.get('password'),
@@ -85,7 +97,7 @@ export async function addClientRecord(data: {
     try {
         console.log('[Sheets Server] Attempting to add client:', data.clientId);
         const doc = await getDoc();
-        const sheet = doc.sheetsByIndex[0];
+        const sheet = await getPreferredSheet(doc);
 
         await sheet.addRow({
             clientId: data.clientId,
@@ -122,10 +134,10 @@ export async function updateClientRecord(clientId: string, data: Partial<{
 }>) {
     try {
         const doc = await getDoc();
-        const sheet = doc.sheetsByIndex[0];
+        const sheet = await getPreferredSheet(doc);
         const rows = await sheet.getRows();
 
-        const row = rows.find(r => r.get('clientId') === clientId);
+        const row = rows.find((r: GoogleSpreadsheetRow) => r.get('clientId') === clientId);
         if (!row) throw new Error('Client not found');
 
         if (data.ssid !== undefined) row.set('ssid', data.ssid);
@@ -149,24 +161,32 @@ export async function updateClientRecord(clientId: string, data: Partial<{
  */
 export async function fetchNearestVenue(userLat: number, userLng: number) {
     const venues = await fetchSheetData() as WifiCredentials[];
-    if (!venues || venues.length === 0) return null;
+    if (!venues || venues.length === 0) {
+        console.log('[Discovery] No venues found in sheet.');
+        return null;
+    }
 
-    let nearest = null;
+    let nearest: WifiCredentials | null = null;
     let minDistance = Infinity;
 
-    venues.forEach(venue => {
+    for (const venue of venues) {
         if (venue.lat && venue.lng) {
             // Simple distance formula for close proximity
             const distance = Math.sqrt(
                 Math.pow(venue.lat - userLat, 2) +
                 Math.pow(venue.lng - userLng, 2)
             );
+
+            console.log(`[Discovery] Checking Venue: ${venue.clientId || 'unknown'} | Dist: ${distance.toFixed(6)}`);
+
             if (distance < minDistance) {
                 minDistance = distance;
                 nearest = venue;
             }
         }
-    });
+    }
+
+    console.log(`[Discovery] Nearest Venue: ${nearest?.clientId || 'NONE'} | Min Dist: ${minDistance === Infinity ? '0' : minDistance.toFixed(6)}`);
 
     // Only return if within ~500 meters (approx 0.005 degrees)
     return minDistance < 0.005 ? nearest : null;

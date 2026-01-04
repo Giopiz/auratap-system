@@ -6,24 +6,25 @@ import { QRCodeCanvas } from 'qrcode.react';
 
 interface WiFiCardProps {
     credentials: WifiCredentials;
+    clientId: string;
 }
 
-export default function WiFiCard({ credentials }: WiFiCardProps) {
-    const [status, setStatus] = useState<'idle' | 'copying' | 'connected'>('idle');
+export default function WiFiCard({ credentials, clientId }: WiFiCardProps) {
+    const [status, setStatus] = useState<'idle' | 'downloading' | 'connected'>('idle');
     const [isIos, setIsIos] = useState(false);
+    const [showInstructions, setShowInstructions] = useState(false);
     const [qrImageData, setQrImageData] = useState<string>('');
 
     useEffect(() => {
         const ua = window.navigator.userAgent;
         setIsIos(/iPhone|iPad|iPod/i.test(ua));
 
-        // Small delay to ensure canvas is rendered before grabbing image
         const timer = setTimeout(() => {
             const canvas = document.querySelector('canvas');
             if (canvas) {
                 setQrImageData(canvas.toDataURL('image/png'));
             }
-        }, 100);
+        }, 150);
         return () => clearTimeout(timer);
     }, []);
 
@@ -34,9 +35,10 @@ export default function WiFiCard({ credentials }: WiFiCardProps) {
             window.location.href = wifiString;
             setStatus('connected');
         } else {
-            navigator.clipboard.writeText(credentials.password || '');
-            setStatus('copying');
-            setTimeout(() => setStatus('idle'), 3000);
+            // iOS: Download Profile
+            setStatus('downloading');
+            setShowInstructions(true);
+            window.location.href = `/api/${clientId}/wifi-profile`;
         }
     };
 
@@ -52,62 +54,34 @@ export default function WiFiCard({ credentials }: WiFiCardProps) {
                 Premium Guest Access
             </p>
 
-            <div className="mb-8 space-y-6">
-                <div className="space-y-1">
-                    <p className="text-white/40 text-xs uppercase tracking-widest">Network</p>
-                    <p className="text-2xl text-white font-bold tracking-tight">
-                        {credentials.ssid}
-                    </p>
-                </div>
-
-                {/* QR Container - Hidden Canvas, Visible Image */}
-                <div className="relative inline-block p-4 bg-white rounded-2xl shadow-inner overflow-hidden">
-                    {/* The Canvas is used just to generate the data, then hidden */}
-                    <div className="sr-only">
-                        <QRCodeCanvas
-                            value={wifiString}
-                            size={256}
-                            level="H"
-                            includeMargin={false}
-                        />
+            <div className={`transition-all duration-500 ${showInstructions ? 'opacity-0 scale-95 h-0 overflow-hidden' : 'opacity-100 scale-100'}`}>
+                <div className="mb-8 space-y-6">
+                    <div className="space-y-1">
+                        <p className="text-white/40 text-xs uppercase tracking-widest">Network</p>
+                        <p className="text-2xl text-white font-bold tracking-tight">
+                            {credentials.ssid}
+                        </p>
                     </div>
 
-                    {/* The Image is what the iPhone user actually holds down on */}
-                    {qrImageData ? (
-                        <img
-                            src={qrImageData}
-                            alt="Scan to Connect"
-                            className="w-40 h-40 rounded-lg shadow-sm block pointer-events-auto"
-                            style={{ WebkitTouchCallout: 'default' }} // Explicitly allow Safari system menu
-                        />
-                    ) : (
-                        <div className="w-40 h-40 bg-neutral-200 animate-pulse rounded-lg" />
-                    )}
-
-                    {isIos && (
-                        <div className="absolute -bottom-2 -right-2 bg-blue-500 text-white p-1.5 rounded-full shadow-lg border-2 border-white animate-bounce pointer-events-none">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5" />
-                            </svg>
+                    {/* QR Container - Hidden Canvas, Visible Image */}
+                    <div className="relative inline-block p-4 bg-white rounded-2xl shadow-inner">
+                        <div className="sr-only">
+                            <QRCodeCanvas value={wifiString} size={256} level="H" />
                         </div>
-                    )}
-                </div>
+                        {qrImageData ? (
+                            <img src={qrImageData} alt="Scan" className="w-32 h-32 rounded-lg" />
+                        ) : (
+                            <div className="w-32 h-32 bg-neutral-200 animate-pulse rounded-lg" />
+                        )}
+                    </div>
 
-                <div className="px-4">
-                    {isIos ? (
-                        <p className="text-white/80 text-sm font-medium leading-relaxed">
-                            <span className="text-blue-400 font-bold underline decoration-blue-400/30 underline-offset-4">Hold down</span> the QR code & tap <br />
-                            <span className="text-white">&quot;Join Network&quot;</span> to connect.
-                        </p>
-                    ) : (
+                    <div className="px-4">
                         <p className="text-white/80 text-sm">
-                            Tap the button below or scan the QR code.
+                            {isIos ? "Download your premium connection profile below." : "Tap to connect instantly to the network."}
                         </p>
-                    )}
+                    </div>
                 </div>
-            </div>
 
-            <div className="space-y-3">
                 <button
                     onClick={handleConnect}
                     className={`
@@ -118,27 +92,50 @@ export default function WiFiCard({ credentials }: WiFiCardProps) {
                             : 'bg-green-500 text-white'}
                     `}
                 >
-                    <span className="relative z-10 flex items-center gap-2">
-                        {status === 'idle' && (
-                            <>
-                                {isIos ? 'Copy Password Assistant' : 'One-Tap Connect'}
-                            </>
-                        )}
-                        {status === 'copying' && 'Password Copied!'}
-                        {status === 'connected' && 'Joining Network...'}
+                    <span className="relative z-10">
+                        {status === 'idle' && (isIos ? 'Connect iPhone' : 'One-Tap Connect')}
+                        {status === 'downloading' && 'Downloading Profile...'}
+                        {status === 'connected' && 'Connected'}
                     </span>
-
                     {status === 'idle' && (
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                     )}
                 </button>
-
-                {isIos && status === 'copying' && (
-                    <p className="text-[10px] text-green-400 animate-pulse font-medium">
-                        Paste it when prompted for the Wi-Fi password.
-                    </p>
-                )}
             </div>
+
+            {/* iOS Instruction Guide */}
+            {showInstructions && (
+                <div className="animate-in fade-in zoom-in-95 duration-500 space-y-6">
+                    <div className="bg-blue-500/20 border border-blue-400/30 p-4 rounded-2xl text-left space-y-3">
+                        <h3 className="text-blue-400 font-bold text-sm uppercase tracking-widest">Next Steps</h3>
+                        <ol className="text-white/80 text-sm space-y-4">
+                            <li className="flex gap-3">
+                                <span className="flex-shrink-0 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-[10px] font-bold">1</span>
+                                <span>Tap <b>&quot;Allow&quot;</b> on the system prompt.</span>
+                            </li>
+                            <li className="flex gap-3">
+                                <span className="flex-shrink-0 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-[10px] font-bold">2</span>
+                                <span>Open <b>iPhone Settings</b>.</span>
+                            </li>
+                            <li className="flex gap-3">
+                                <span className="flex-shrink-0 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-[10px] font-bold">3</span>
+                                <span>Tap <b>&quot;Profile Downloaded&quot;</b> at the top.</span>
+                            </li>
+                            <li className="flex gap-3">
+                                <span className="flex-shrink-0 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-[10px] font-bold">4</span>
+                                <span>Tap <b>&quot;Install&quot;</b> and you&apos;re connected!</span>
+                            </li>
+                        </ol>
+                    </div>
+
+                    <button
+                        onClick={() => setShowInstructions(false)}
+                        className="text-white/40 text-xs underline underline-offset-4 hover:text-white transition-colors"
+                    >
+                        Back to main screen
+                    </button>
+                </div>
+            )}
 
             <div className="mt-8 text-white/20 text-[9px] uppercase tracking-[0.2em] font-bold">
                 AuraTap™ Technology

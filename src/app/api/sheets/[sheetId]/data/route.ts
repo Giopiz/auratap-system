@@ -52,7 +52,7 @@ export async function POST(
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         console.error('[Sheets API POST Error]:', errorMessage);
         return NextResponse.json(
-            { error: 'Failed to add client', details: errorMessage },
+            { error: errorMessage }, // Return the actual error message directly
             { status: 500 }
         );
     }

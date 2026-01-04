@@ -65,22 +65,28 @@ export async function fetchSheetData(clientId?: string) {
 
 export async function addClientRecord(data: { clientId: string; ssid?: string; password?: string; theme?: string }) {
     try {
+        console.log('[Sheets Server] Attempting to add client:', data.clientId);
         const doc = await getDoc();
         const sheet = doc.sheetsByIndex[0];
 
+        // Ensure we only send columns that exist or are standard
         await sheet.addRow({
             clientId: data.clientId,
             ssid: data.ssid || '',
             password: data.password || '',
             securityType: 'WPA',
             theme: data.theme || 'marble',
-            setupToken: Math.random().toString(36).substring(2, 15), // Basic token for remote setup
         });
 
+        console.log('[Sheets Server] Successfully added client to sheet.');
         return true;
-    } catch (error) {
-        console.error('[Sheets Server Add Error]:', error);
-        throw error;
+    } catch (error: any) {
+        console.error('[Sheets Server Add Error]:', error?.message || error);
+        // Provide a cleaner error message for the UI
+        if (error?.message?.includes('duplicate')) {
+            throw new Error('This Client ID already exists in the sheet.');
+        }
+        throw new Error(`Google Sheets Error: ${error?.message || 'Check your sheet headers'}`);
     }
 }
 

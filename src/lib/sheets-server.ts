@@ -5,33 +5,35 @@ import path from 'path';
 
 const GOOGLE_SHEET_ID = '1Wtid4l81oQvqdqY1wXk_cOgF6moodVRkzKj9V7ORQLQ';
 
+async function getDoc() {
+    let creds;
+    const secretsPath = path.join(process.cwd(), 'secrets', 'google-service-account.json');
+
+    if (fs.existsSync(secretsPath)) {
+        const fileContent = fs.readFileSync(secretsPath, 'utf8');
+        creds = JSON.parse(fileContent);
+    } else if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
+        creds = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+    }
+
+    if (!creds) {
+        throw new Error('No Google Service Account credentials found.');
+    }
+
+    const serviceAccountAuth = new JWT({
+        email: creds.client_email,
+        key: creds.private_key,
+        scopes: ['https://www.googleapis.com/auth/spreadsheets'], // Full access for writes
+    });
+
+    const doc = new GoogleSpreadsheet(GOOGLE_SHEET_ID, serviceAccountAuth);
+    await doc.loadInfo();
+    return doc;
+}
+
 export async function fetchSheetData(clientId?: string) {
     try {
-        let creds;
-        const secretsPath = path.join(process.cwd(), 'secrets', 'google-service-account.json');
-
-        // 1. Load Credentials (File or Env)
-        if (fs.existsSync(secretsPath)) {
-            const fileContent = fs.readFileSync(secretsPath, 'utf8');
-            creds = JSON.parse(fileContent);
-        } else if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
-            creds = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
-        }
-
-        if (!creds) {
-            throw new Error('No Google Service Account credentials found.');
-        }
-
-        // 2. Authenticate
-        const serviceAccountAuth = new JWT({
-            email: creds.client_email,
-            key: creds.private_key,
-            scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
-        });
-
-        const doc = new GoogleSpreadsheet(GOOGLE_SHEET_ID, serviceAccountAuth);
-        await doc.loadInfo();
-
+        const doc = await getDoc();
         const sheet = doc.sheetsByIndex[0];
         const rows = await sheet.getRows();
 
@@ -56,7 +58,49 @@ export async function fetchSheetData(clientId?: string) {
         }));
 
     } catch (error) {
-        console.error('[Sheets Server Error]:', error);
+        console.error('[Sheets Server Fetch Error]:', error);
+        return clientId ? null : [];
+    }
+}
+
+export async function addClientRecord(data: { clientId: string; ssid?: string; password?: string; theme?: string }) {
+    try {
+        const doc = await getDoc();
+        const sheet = doc.sheetsByIndex[0];
+
+        await sheet.addRow({
+            clientId: data.clientId,
+            ssid: data.ssid || '',
+            password: data.password || '',
+            securityType: 'WPA',
+            theme: data.theme || 'marble',
+            setupToken: Math.random().toString(36).substring(2, 15), // Basic token for remote setup
+        });
+
+        return true;
+    } catch (error) {
+        console.error('[Sheets Server Add Error]:', error);
+        throw error;
+    }
+}
+
+export async function updateClientRecord(clientId: string, data: Partial<{ ssid: string; password: string; theme: string }>) {
+    try {
+        const doc = await getDoc();
+        const sheet = doc.sheetsByIndex[0];
+        const rows = await sheet.getRows();
+
+        const row = rows.find(r => r.get('clientId') === clientId);
+        if (!row) throw new Error('Client not found');
+
+        if (data.ssid !== undefined) row.set('ssid', data.ssid);
+        if (data.password !== undefined) row.set('password', data.password);
+        if (data.theme !== undefined) row.set('theme', data.theme);
+
+        await row.save();
+        return true;
+    } catch (error) {
+        console.error('[Sheets Server Update Error]:', error);
         throw error;
     }
 }

@@ -1,4 +1,5 @@
-import { getWifiCredentials } from '@/lib/wifi-service';
+import { WifiCredentials } from '@/lib/wifi-service';
+import { fetchSheetData } from '@/lib/sheets-server';
 import WiFiCard from '@/components/WiFiCard';
 import { notFound } from 'next/navigation';
 
@@ -10,7 +11,7 @@ interface PageProps {
 
 export default async function ClientPage({ params }: PageProps) {
     const { clientId } = await params;
-    const credentials = await getWifiCredentials(clientId);
+    const credentials = await fetchSheetData(clientId) as WifiCredentials | null;
 
     if (!credentials) {
         notFound();

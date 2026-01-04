@@ -29,36 +29,35 @@ const MOCK_DB: Record<string, WifiCredentials> = {
 
 const GOOGLE_SHEET_ID = '1Wtid4l81oQvqdqY1wXk_cOgF6moodVRkzKj9V7ORQLQ';
 
+/**
+ * Fetches credentials for a specific client.
+ * Note: When called from Server Components, this needs a full URL or a direct DB call.
+ * For now, we'll use a relative URL which works on the client, and a fallback for server-side.
+ */
 export async function getWifiCredentials(clientId: string): Promise<WifiCredentials | null> {
-    // Try to fetch from Google Sheets via API route
     try {
-        const response = await fetch(`http://localhost:3000/api/sheets/${GOOGLE_SHEET_ID}/data?clientId=${clientId}`, {
+        // Use relative URL for client-side, and handle server-side via environment variable or default
+        const baseUrl = typeof window !== 'undefined'
+            ? ''
+            : (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+
+        const response = await fetch(`${baseUrl}/api/sheets/${GOOGLE_SHEET_ID}/data?clientId=${clientId}`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
-            cache: 'no-store'
+            next: { revalidate: 0 } // Disable cache for live data
         });
 
         if (response.ok) {
             const data = await response.json();
             if (data && data.ssid) {
-                console.log('✅ Fetched from Google Sheets:', data);
-                return {
-                    ssid: data.ssid,
-                    password: data.password,
-                    securityType: data.securityType || 'WPA',
-                    theme: data.theme || 'marble'
-                };
+                return data;
             }
         }
     } catch (error) {
-        console.warn('⚠️ Google Sheets unavailable, using mock data:', error);
+        console.warn('⚠️ Google Sheets sync issue:', error);
     }
 
-    // Fallback to mock data
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Fallback to mock data for instant preview if Sheets are down
     const mockData = MOCK_DB[clientId];
-    if (mockData) {
-        console.log('📦 Using mock data for:', clientId);
-    }
     return mockData || null;
 }

@@ -105,11 +105,11 @@ export default function DashboardPage() {
                 </table>
             </div>
 
-            <div className="mt-8 p-4 border border-green-500/30 bg-green-500/10 rounded-lg text-green-200 text-sm flex items-center gap-3">
+            <div className="mt-8 p-4 border-green-500/30 bg-green-500/10 rounded-lg text-green-200 text-sm flex items-center gap-3">
                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                 <span>
-                    <strong>Live System:</strong> Connected to Google Sheet `1Wtid4l81oQvqdqY1wXk_cOgF6moodVRkzKj9V7ORQLQ`.
-                    Real-time edits require the MCP server to be active on port 3001.
+                    <strong>Live System:</strong> Connected via Cloud-Ready Direct API to Sheet `1Wtid4l81oQvqdqY1wXk_cOgF6moodVRkzKj9V7ORQLQ`.
+                    Real-time edits are synced instantly from the cloud.
                 </span>
             </div>
         </div>

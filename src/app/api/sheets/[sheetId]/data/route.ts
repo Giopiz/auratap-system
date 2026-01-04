@@ -45,7 +45,16 @@ export async function POST(
             return NextResponse.json({ error: 'clientId is required' }, { status: 400 });
         }
 
-        await addClientRecord({ clientId, ssid, password, theme, venueType, ownerEmail, lat, lng });
+        await addClientRecord({
+            clientId,
+            ssid,
+            password,
+            theme,
+            venueType,
+            ownerEmail,
+            lat: lat ? parseFloat(lat) : undefined,
+            lng: lng ? parseFloat(lng) : undefined
+        });
         return NextResponse.json({ success: true, message: 'Client added successfully' });
 
     } catch (error: unknown) {
@@ -71,7 +80,15 @@ export async function PATCH(
             return NextResponse.json({ error: 'clientId is required' }, { status: 400 });
         }
 
-        await updateClientRecord(clientId, { ssid, password, theme, venueType, ownerEmail, lat, lng });
+        await updateClientRecord(clientId, {
+            ssid,
+            password,
+            theme,
+            venueType,
+            ownerEmail,
+            lat: lat !== undefined ? Number(lat) : undefined,
+            lng: lng !== undefined ? Number(lng) : undefined
+        });
         return NextResponse.json({ success: true, message: 'Client updated successfully' });
 
     } catch (error: unknown) {

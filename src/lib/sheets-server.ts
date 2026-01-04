@@ -95,8 +95,8 @@ export async function addClientRecord(data: {
             theme: data.theme || 'marble',
             venueType: data.venueType || 'cafe',
             ownerEmail: data.ownerEmail || '',
-            lat: data.lat || '',
-            lng: data.lng || '',
+            lat: data.lat !== undefined && data.lat !== null ? Number(data.lat) : '',
+            lng: data.lng !== undefined && data.lng !== null ? Number(data.lng) : '',
         });
 
         console.log('[Sheets Server] Successfully added client to sheet.');
@@ -133,8 +133,8 @@ export async function updateClientRecord(clientId: string, data: Partial<{
         if (data.theme !== undefined) row.set('theme', data.theme);
         if (data.venueType !== undefined) row.set('venueType', data.venueType);
         if (data.ownerEmail !== undefined) row.set('ownerEmail', data.ownerEmail);
-        if (data.lat !== undefined) row.set('lat', data.lat);
-        if (data.lng !== undefined) row.set('lng', data.lng);
+        if (data.lat !== undefined) row.set('lat', data.lat !== null ? Number(data.lat) : '');
+        if (data.lng !== undefined) row.set('lng', data.lng !== null ? Number(data.lng) : '');
 
         await row.save();
         return true;
@@ -168,6 +168,6 @@ export async function fetchNearestVenue(userLat: number, userLng: number) {
         }
     });
 
-    // Only return if within ~100 meters (approx 0.001 degrees)
-    return minDistance < 0.001 ? nearest : null;
+    // Only return if within ~500 meters (approx 0.005 degrees)
+    return minDistance < 0.005 ? nearest : null;
 }

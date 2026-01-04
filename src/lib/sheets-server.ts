@@ -61,6 +61,12 @@ function getRowValue(row: GoogleSpreadsheetRow, key: string): string {
     return '';
 }
 
+function parseCoordinate(val: string | number | null | undefined): number | null {
+    if (val === undefined || val === null || val === '') return null;
+    const num = parseFloat(String(val));
+    return isNaN(num) ? null : num;
+}
+
 export async function fetchSheetData(clientId?: string) {
     try {
         const doc = await getDoc();
@@ -79,8 +85,8 @@ export async function fetchSheetData(clientId?: string) {
                 theme: getRowValue(row, 'theme') || 'marble',
                 venueType: getRowValue(row, 'venueType') || 'cafe',
                 ownerEmail: getRowValue(row, 'ownerEmail') || '',
-                lat: parseFloat(getRowValue(row, 'lat')) || null,
-                lng: parseFloat(getRowValue(row, 'lng')) || null,
+                lat: parseCoordinate(getRowValue(row, 'lat')),
+                lng: parseCoordinate(getRowValue(row, 'lng')),
             };
         }
 
@@ -92,8 +98,8 @@ export async function fetchSheetData(clientId?: string) {
             theme: getRowValue(row, 'theme') || 'marble',
             venueType: getRowValue(row, 'venueType') || 'cafe',
             ownerEmail: getRowValue(row, 'ownerEmail') || '',
-            lat: parseFloat(getRowValue(row, 'lat')) || null,
-            lng: parseFloat(getRowValue(row, 'lng')) || null,
+            lat: parseCoordinate(getRowValue(row, 'lat')),
+            lng: parseCoordinate(getRowValue(row, 'lng')),
         }));
 
     } catch (error) {
@@ -163,8 +169,8 @@ export async function updateClientRecord(clientId: string, data: Partial<{
         if (data.theme !== undefined) row.set('theme', data.theme);
         if (data.venueType !== undefined) row.set('venueType', data.venueType);
         if (data.ownerEmail !== undefined) row.set('ownerEmail', data.ownerEmail);
-        if (data.lat !== undefined) row.set('lat', data.lat !== null ? Number(data.lat) : '');
-        if (data.lng !== undefined) row.set('lng', data.lng !== null ? Number(data.lng) : '');
+        if (data.lat !== undefined) row.set('lat', data.lat !== null ? String(data.lat) : '');
+        if (data.lng !== undefined) row.set('lng', data.lng !== null ? String(data.lng) : '');
 
         await row.save();
         return true;
@@ -188,11 +194,14 @@ export async function fetchNearestVenue(userLat: number, userLng: number) {
     let minDistance = Infinity;
 
     for (const venue of venues) {
-        if (venue.lat && venue.lng) {
+        const vLat = venue.lat;
+        const vLng = venue.lng;
+
+        if (vLat !== null && vLng !== null && vLat !== undefined && vLng !== undefined) {
             // Simple distance formula for close proximity
             const distance = Math.sqrt(
-                Math.pow(venue.lat - userLat, 2) +
-                Math.pow(venue.lng - userLng, 2)
+                Math.pow(vLat - userLat, 2) +
+                Math.pow(vLng - userLng, 2)
             );
 
             console.log(`[Discovery] Checking Venue: ${venue.clientId || 'unknown'} | Dist: ${distance.toFixed(6)}`);
@@ -206,6 +215,6 @@ export async function fetchNearestVenue(userLat: number, userLng: number) {
 
     console.log(`[Discovery] Nearest Venue: ${nearest?.clientId || 'NONE'} | Min Dist: ${minDistance === Infinity ? '0' : minDistance.toFixed(6)}`);
 
-    // Only return if within ~500 meters (approx 0.005 degrees)
-    return minDistance < 0.005 ? nearest : null;
+    // Only return if within ~1km (approx 0.01 degrees)
+    return minDistance < 0.01 ? nearest : null;
 }

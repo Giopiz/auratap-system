@@ -28,7 +28,7 @@ export default function Home() {
             const data = await res.json();
             setVenue(data);
           } else {
-            setError("No AuraTap venue found at your current location.");
+            setError(`No AuraTap venue found nearby (${latitude.toFixed(4)}, ${longitude.toFixed(4)}). Radius: 1km.`);
           }
         } catch {
           setError("Unable to connect to AuraTap Discovery.");

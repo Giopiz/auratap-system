@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+export const dynamic = 'force-dynamic';
 import { fetchNearestVenue } from '@/lib/sheets-server';
 
 export async function GET(request: NextRequest) {

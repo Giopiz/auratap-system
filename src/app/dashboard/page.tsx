@@ -66,11 +66,13 @@ export default function DashboardPage() {
                 setNewClient({ clientId: '', ssid: '', password: '', theme: 'marble' });
                 fetchClients();
             } else {
-                const err = await res.json();
-                alert(`Error: ${err.error || 'Failed to add client'}`);
+                const errData = await res.json();
+                console.error('Registration failed:', errData);
+                alert(`Error: ${errData.error || 'Failed to add client'}`);
             }
-        } catch {
-            alert('Failed to connect to API');
+        } catch (err) {
+            console.error('Network/API Error:', err);
+            alert('Failed to connect to API. See console for details.');
         } finally {
             setIsSubmitting(false);
         }

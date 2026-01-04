@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { WifiCredentials } from '@/lib/wifi-service';
 import { QRCodeCanvas } from 'qrcode.react';
 
@@ -12,7 +12,6 @@ export default function WiFiCard({ credentials }: WiFiCardProps) {
     const [status, setStatus] = useState<'idle' | 'copying' | 'connected'>('idle');
     const [isIos, setIsIos] = useState(false);
     const [qrImageData, setQrImageData] = useState<string>('');
-    const canvasRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const ua = window.navigator.userAgent;

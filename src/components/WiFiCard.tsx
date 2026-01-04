@@ -30,49 +30,69 @@ export default function WiFiCard({ credentials }: WiFiCardProps) {
 
     const handleConnect = () => {
         if (!isIos) {
-            // Android: Pure One-Tap
             window.location.href = wifiString;
             setStatus('connected');
         } else {
-            // iOS: One-Tap Copy + Instruction
             navigator.clipboard.writeText(credentials.password || '');
             setStatus('copying');
-            // Auto-reset copying state after 5 seconds
             setTimeout(() => setStatus('idle'), 5000);
+        }
+    };
+
+    // Venue Icons
+    const VenueIcon = () => {
+        const type = credentials.venueType || 'cafe';
+        switch (type) {
+            case 'bar':
+                return (
+                    <svg className="w-6 h-6 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.871 4A17.926 17.926 0 003 12c0 2.874.673 5.59 1.871 8m14.13 0a17.926 17.926 0 001.87-8c0-2.874-.673-5.59-1.87-8M9 9h1.246a1 1 0 01.961.725l1.586 5.55a1 1 0 00.961.725H15m1-7h-.08a2 2 0 00-1.888 1.332l-3.08 9.336A2 2 0 019.064 21H9" />
+                    </svg>
+                );
+            case 'hotel':
+                return (
+                    <svg className="w-6 h-6 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                );
+            case 'restaurant':
+                return (
+                    <svg className="w-6 h-6 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                    </svg>
+                );
+            default: // cafe
+                return (
+                    <svg className="w-6 h-6 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 14l9-5-9-5-9 5 9 5z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                    </svg>
+                );
         }
     };
 
     return (
         <div className="relative z-10 w-full max-w-md p-8 mx-4 overflow-hidden text-center transition-all duration-500 bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl hover:shadow-white/10 group select-none touch-none">
-            {/* Glossy overlay */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
-            <h1 className="text-3xl font-light tracking-widest text-white mb-2 font-sans">
-                AURATAP
+            <div className="flex justify-center mb-4">
+                <VenueIcon />
+            </div>
+
+            <h1 className="text-3xl font-light tracking-widest text-white mb-2 font-sans uppercase">
+                {credentials.ssid}
             </h1>
             <p className="text-white/60 text-[10px] tracking-[0.3em] uppercase mb-8">
-                Premium Guest Access
+                {credentials.venueType || 'Premium'} Guest Network
             </p>
 
             <div className="mb-8 space-y-6">
-                <div className="space-y-1">
-                    <p className="text-white/40 text-xs uppercase tracking-widest">Network</p>
-                    <p className="text-2xl text-white font-bold tracking-tight">
-                        {credentials.ssid}
-                    </p>
-                </div>
-
-                {/* QR Container - Reference only for other devices */}
                 <div className="relative inline-block p-4 bg-white rounded-2xl shadow-inner">
                     <div className="sr-only">
                         <QRCodeCanvas value={wifiString} size={256} level="H" />
                     </div>
                     {qrImageData ? (
-                        <img
-                            src={qrImageData}
-                            alt="Scan"
-                            className="w-32 h-32 rounded-lg opacity-80"
-                        />
+                        <img src={qrImageData} alt="Scan" className="w-32 h-32 rounded-lg" />
                     ) : (
                         <div className="w-32 h-32 bg-neutral-200 animate-pulse rounded-lg" />
                     )}
@@ -85,7 +105,7 @@ export default function WiFiCard({ credentials }: WiFiCardProps) {
                         </p>
                     ) : (
                         <p className="text-white/60 text-xs uppercase tracking-[0.1em]">
-                            {isIos ? "Instant iPhone Connection" : "One-Tap Connect"}
+                            {isIos ? "Instant Connection Helper" : "One-Tap Connect"}
                         </p>
                     )}
                 </div>
@@ -112,28 +132,19 @@ export default function WiFiCard({ credentials }: WiFiCardProps) {
                     )}
                 </button>
 
-                {/* iOS Assistant Graphic */}
                 {isIos && status === 'copying' && (
                     <div className="pt-4 animate-in fade-in slide-in-from-top-2 duration-500">
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 space-y-3">
-                            <p className="text-white text-sm font-medium">
-                                1. Open your <b>Settings</b> app <br />
-                                2. Select <b>Wi-Fi</b> <br />
-                                3. Tap <b>&quot;{credentials.ssid}&quot;</b> & paste!
-                            </p>
-                            <div className="flex justify-center">
-                                <div className="w-8 h-12 border-2 border-white/20 rounded-lg relative overflow-hidden">
-                                    <div className="absolute top-1 left-1 right-1 h-3 bg-white/10 rounded-sm animate-pulse" />
-                                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full border border-white/40 border-dashed animate-spin" />
-                                </div>
-                            </div>
+                        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-sm font-medium">
+                            1. Open Settings &gt; Wi-Fi <br />
+                            2. Tap <b>&quot;{credentials.ssid}&quot;</b> <br />
+                            3. Tap <b>Paste</b> when prompted!
                         </div>
                     </div>
                 )}
             </div>
 
             <div className="mt-8 text-white/20 text-[9px] uppercase tracking-[0.2em] font-bold">
-                AuraTap™ Technology
+                AuraTap Discovery™ 2026
             </div>
         </div>
     );

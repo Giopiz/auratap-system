@@ -1,5 +1,6 @@
 import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
+import { WifiCredentials } from './wifi-service';
 import fs from 'fs';
 import path from 'path';
 
@@ -46,6 +47,9 @@ export async function fetchSheetData(clientId?: string) {
                 password: row.get('password'),
                 securityType: row.get('securityType') || 'WPA',
                 theme: row.get('theme') || 'marble',
+                venueType: row.get('venueType') || 'cafe',
+                lat: parseFloat(row.get('lat')) || null,
+                lng: parseFloat(row.get('lng')) || null,
             };
         }
 
@@ -55,6 +59,9 @@ export async function fetchSheetData(clientId?: string) {
             password: row.get('password'),
             securityType: row.get('securityType') || 'WPA',
             theme: row.get('theme') || 'marble',
+            venueType: row.get('venueType') || 'cafe',
+            lat: parseFloat(row.get('lat')) || null,
+            lng: parseFloat(row.get('lng')) || null,
         }));
 
     } catch (error) {
@@ -63,19 +70,29 @@ export async function fetchSheetData(clientId?: string) {
     }
 }
 
-export async function addClientRecord(data: { clientId: string; ssid?: string; password?: string; theme?: string }) {
+export async function addClientRecord(data: {
+    clientId: string;
+    ssid?: string;
+    password?: string;
+    theme?: string;
+    venueType?: string;
+    lat?: number;
+    lng?: number;
+}) {
     try {
         console.log('[Sheets Server] Attempting to add client:', data.clientId);
         const doc = await getDoc();
         const sheet = doc.sheetsByIndex[0];
 
-        // Ensure we only send columns that exist or are standard
         await sheet.addRow({
             clientId: data.clientId,
             ssid: data.ssid || '',
             password: data.password || '',
             securityType: 'WPA',
             theme: data.theme || 'marble',
+            venueType: data.venueType || 'cafe',
+            lat: data.lat || '',
+            lng: data.lng || '',
         });
 
         console.log('[Sheets Server] Successfully added client to sheet.');
@@ -83,7 +100,6 @@ export async function addClientRecord(data: { clientId: string; ssid?: string; p
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : String(error);
         console.error('[Sheets Server Add Error]:', message);
-        // Provide a cleaner error message for the UI
         if (message.includes('duplicate')) {
             throw new Error('This Client ID already exists in the sheet.');
         }
@@ -91,7 +107,14 @@ export async function addClientRecord(data: { clientId: string; ssid?: string; p
     }
 }
 
-export async function updateClientRecord(clientId: string, data: Partial<{ ssid: string; password: string; theme: string }>) {
+export async function updateClientRecord(clientId: string, data: Partial<{
+    ssid: string;
+    password: string;
+    theme: string;
+    venueType: string;
+    lat: number;
+    lng: number;
+}>) {
     try {
         const doc = await getDoc();
         const sheet = doc.sheetsByIndex[0];
@@ -103,6 +126,9 @@ export async function updateClientRecord(clientId: string, data: Partial<{ ssid:
         if (data.ssid !== undefined) row.set('ssid', data.ssid);
         if (data.password !== undefined) row.set('password', data.password);
         if (data.theme !== undefined) row.set('theme', data.theme);
+        if (data.venueType !== undefined) row.set('venueType', data.venueType);
+        if (data.lat !== undefined) row.set('lat', data.lat);
+        if (data.lng !== undefined) row.set('lng', data.lng);
 
         await row.save();
         return true;
@@ -110,4 +136,32 @@ export async function updateClientRecord(clientId: string, data: Partial<{ ssid:
         console.error('[Sheets Server Update Error]:', error);
         throw error;
     }
+}
+
+/**
+ * Discovery Engine: Finds the nearest venue based on lat/lng
+ */
+export async function fetchNearestVenue(userLat: number, userLng: number) {
+    const venues = await fetchSheetData() as WifiCredentials[];
+    if (!venues || venues.length === 0) return null;
+
+    let nearest = null;
+    let minDistance = Infinity;
+
+    venues.forEach(venue => {
+        if (venue.lat && venue.lng) {
+            // Simple distance formula for close proximity
+            const distance = Math.sqrt(
+                Math.pow(venue.lat - userLat, 2) +
+                Math.pow(venue.lng - userLng, 2)
+            );
+            if (distance < minDistance) {
+                minDistance = distance;
+                nearest = venue;
+            }
+        }
+    });
+
+    // Only return if within ~100 meters (approx 0.001 degrees)
+    return minDistance < 0.001 ? nearest : null;
 }

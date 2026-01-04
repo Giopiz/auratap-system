@@ -4,6 +4,9 @@ export interface WifiCredentials {
     password?: string;
     securityType?: 'WPA' | 'WEP' | 'nopass';
     theme?: 'marble' | 'steel' | 'wood';
+    venueType?: string;
+    lat?: number | null;
+    lng?: number | null;
 }
 
 // Mock data store - will be replaced by MCP Google Sheets later

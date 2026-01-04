@@ -1,32 +1,35 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { WifiCredentials } from '@/lib/wifi-service';
+import { QRCodeCanvas } from 'qrcode.react';
 
 interface WiFiCardProps {
     credentials: WifiCredentials;
 }
 
 export default function WiFiCard({ credentials }: WiFiCardProps) {
-    const [status, setStatus] = useState<'idle' | 'connecting' | 'connected'>('idle');
+    const [status, setStatus] = useState<'idle' | 'copying' | 'connected'>('idle');
+    const [isIos, setIsIos] = useState(false);
+
+    useEffect(() => {
+        const ua = window.navigator.userAgent;
+        setIsIos(/iPhone|iPad|iPod/i.test(ua));
+    }, []);
+
+    const wifiString = `WIFI:S:${credentials.ssid};P:${credentials.password};T:${credentials.securityType || 'WPA'};;`;
 
     const handleConnect = () => {
-        setStatus('connecting');
-
-        // Construct WiFi URI
-        // Format: WIFI:S:ssid;P:password;T:securityType;;
-        // Note: hidden is false by default in this context
-        const security = credentials.securityType || 'WPA';
-        const passwordPart = credentials.password ? `P:${credentials.password};` : '';
-        const wifiString = `WIFI:S:${credentials.ssid};${passwordPart}T:${security};;`;
-
-        // Attempt to launch URI
-        window.location.href = wifiString;
-
-        // Simulate "connected" state after a short delay for UX
-        setTimeout(() => {
+        if (!isIos) {
+            // Android/Desktop: Try direct URI
+            window.location.href = wifiString;
             setStatus('connected');
-        }, 2000);
+        } else {
+            // iOS: Copy password as fallback/assistance
+            navigator.clipboard.writeText(credentials.password || '');
+            setStatus('copying');
+            setTimeout(() => setStatus('idle'), 3000);
+        }
     };
 
     return (
@@ -37,41 +40,85 @@ export default function WiFiCard({ credentials }: WiFiCardProps) {
             <h1 className="text-3xl font-light tracking-widest text-white mb-2 font-sans">
                 AURATAP
             </h1>
-            <p className="text-white/60 text-sm tracking-wider uppercase mb-12">
+            <p className="text-white/60 text-[10px] tracking-[0.3em] uppercase mb-8">
                 Premium Guest Access
             </p>
 
-            <div className="mb-8 space-y-2">
-                <p className="text-white/80 text-lg font-medium">Network</p>
-                <p className="text-2xl text-white font-bold tracking-tight">
-                    {credentials.ssid}
-                </p>
+            <div className="mb-8 space-y-6">
+                <div className="space-y-1">
+                    <p className="text-white/40 text-xs uppercase tracking-widest">Network</p>
+                    <p className="text-2xl text-white font-bold tracking-tight">
+                        {credentials.ssid}
+                    </p>
+                </div>
+
+                {/* Magic QR Code Container */}
+                <div className="relative inline-block p-4 bg-white rounded-2xl shadow-inner">
+                    <QRCodeCanvas
+                        value={wifiString}
+                        size={160}
+                        level="H"
+                        includeMargin={false}
+                        className="rounded-lg shadow-sm"
+                    />
+                    {isIos && (
+                        <div className="absolute -bottom-2 -right-2 bg-blue-500 text-white p-1.5 rounded-full shadow-lg border-2 border-white animate-bounce">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5" />
+                            </svg>
+                        </div>
+                    )}
+                </div>
+
+                <div className="px-4">
+                    {isIos ? (
+                        <p className="text-white/80 text-sm font-medium leading-relaxed">
+                            <span className="text-blue-400 font-bold underline decoration-blue-400/30 underline-offset-4">Hold down</span> the QR code & tap <br />
+                            <span className="text-white">&quot;Join Network&quot;</span> to connect.
+                        </p>
+                    ) : (
+                        <p className="text-white/80 text-sm">
+                            Tap the button below or scan the QR code.
+                        </p>
+                    )}
+                </div>
             </div>
 
-            <button
-                onClick={handleConnect}
-                disabled={status === 'connecting' || status === 'connected'}
-                className={`
-                    flex items-center justify-center gap-3 group overflow-hidden relative
-                    w-full py-4 px-6 rounded-2xl font-bold text-lg tracking-wide transition-all duration-300 active:scale-95
-                    ${status === 'idle'
-                        ? 'bg-white text-black hover:bg-neutral-200 shadow-2xl hover:shadow-white/20'
-                        : 'bg-green-500 text-white cursor-default'}
-                `}
-            >
-                <span className="relative z-10">
-                    {status === 'idle' && 'One-Tap Connect'}
-                    {status === 'connecting' && 'Connecting...'}
-                    {status === 'connected' && 'Connected'}
-                </span>
+            <div className="space-y-3">
+                <button
+                    onClick={handleConnect}
+                    className={`
+                        flex items-center justify-center gap-3 group overflow-hidden relative
+                        w-full py-4 px-6 rounded-2xl font-bold text-lg tracking-wide transition-all duration-300 active:scale-95
+                        ${status === 'idle'
+                            ? 'bg-white text-black hover:bg-neutral-200 shadow-2xl hover:shadow-white/20'
+                            : 'bg-green-500 text-white'}
+                    `}
+                >
+                    <span className="relative z-10 flex items-center gap-2">
+                        {status === 'idle' && (
+                            <>
+                                {isIos ? 'Copy Password Assistant' : 'One-Tap Connect'}
+                            </>
+                        )}
+                        {status === 'copying' && 'Password Copied!'}
+                        {status === 'connected' && 'Joining Network...'}
+                    </span>
 
-                {status === 'idle' && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                    {status === 'idle' && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                    )}
+                </button>
+
+                {isIos && status === 'copying' && (
+                    <p className="text-[10px] text-green-400 animate-pulse font-medium">
+                        Paste it when prompted for the Wi-Fi password.
+                    </p>
                 )}
-            </button>
+            </div>
 
-            <div className="mt-8 text-white/40 text-xs">
-                Powered by AuraTap™
+            <div className="mt-8 text-white/20 text-[9px] uppercase tracking-[0.2em] font-bold">
+                AuraTap™ Technology
             </div>
         </div>
     );

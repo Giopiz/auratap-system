@@ -48,6 +48,7 @@ export async function fetchSheetData(clientId?: string) {
                 securityType: row.get('securityType') || 'WPA',
                 theme: row.get('theme') || 'marble',
                 venueType: row.get('venueType') || 'cafe',
+                ownerEmail: row.get('ownerEmail') || '',
                 lat: parseFloat(row.get('lat')) || null,
                 lng: parseFloat(row.get('lng')) || null,
             };
@@ -60,6 +61,7 @@ export async function fetchSheetData(clientId?: string) {
             securityType: row.get('securityType') || 'WPA',
             theme: row.get('theme') || 'marble',
             venueType: row.get('venueType') || 'cafe',
+            ownerEmail: row.get('ownerEmail') || '',
             lat: parseFloat(row.get('lat')) || null,
             lng: parseFloat(row.get('lng')) || null,
         }));
@@ -76,6 +78,7 @@ export async function addClientRecord(data: {
     password?: string;
     theme?: string;
     venueType?: string;
+    ownerEmail?: string;
     lat?: number;
     lng?: number;
 }) {
@@ -91,6 +94,7 @@ export async function addClientRecord(data: {
             securityType: 'WPA',
             theme: data.theme || 'marble',
             venueType: data.venueType || 'cafe',
+            ownerEmail: data.ownerEmail || '',
             lat: data.lat || '',
             lng: data.lng || '',
         });
@@ -112,6 +116,7 @@ export async function updateClientRecord(clientId: string, data: Partial<{
     password: string;
     theme: string;
     venueType: string;
+    ownerEmail: string;
     lat: number;
     lng: number;
 }>) {
@@ -127,6 +132,7 @@ export async function updateClientRecord(clientId: string, data: Partial<{
         if (data.password !== undefined) row.set('password', data.password);
         if (data.theme !== undefined) row.set('theme', data.theme);
         if (data.venueType !== undefined) row.set('venueType', data.venueType);
+        if (data.ownerEmail !== undefined) row.set('ownerEmail', data.ownerEmail);
         if (data.lat !== undefined) row.set('lat', data.lat);
         if (data.lng !== undefined) row.set('lng', data.lng);
 

@@ -5,12 +5,14 @@ import { useState } from 'react';
 
 interface ClientToolkitProps {
     clientId: string;
+    ownerEmail?: string;
     onClose: () => void;
 }
 
-export default function ClientToolkit({ clientId, onClose }: ClientToolkitProps) {
+export default function ClientToolkit({ clientId, ownerEmail, onClose }: ClientToolkitProps) {
     const [copied, setCopied] = useState(false);
-    const landingUrl = `${window.location.origin}/${clientId}`;
+    const landingUrl = typeof window !== 'undefined' ? `${window.location.origin}/${clientId}` : '';
+    const setupUrl = typeof window !== 'undefined' ? `${window.location.origin}/${clientId}/setup` : '';
 
     const handleCopyNfc = () => {
         navigator.clipboard.writeText(landingUrl);
@@ -83,12 +85,12 @@ export default function ClientToolkit({ clientId, onClose }: ClientToolkitProps)
                             <div className="flex gap-2">
                                 <input
                                     readOnly
-                                    value={`${window.location.origin}/${clientId}/setup`}
+                                    value={setupUrl}
                                     className="flex-1 bg-neutral-900/50 border border-blue-500/20 rounded px-2 py-1 text-[10px] text-blue-300 font-mono outline-none"
                                 />
                                 <button
                                     onClick={() => {
-                                        navigator.clipboard.writeText(`${window.location.origin}/${clientId}/setup`);
+                                        navigator.clipboard.writeText(setupUrl);
                                         alert('Setup link copied!');
                                     }}
                                     className="text-[10px] bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded font-bold transition-colors"
@@ -108,10 +110,17 @@ export default function ClientToolkit({ clientId, onClose }: ClientToolkitProps)
                         Print QR Code
                     </button>
                     <button
-                        disabled
-                        className="flex-1 bg-neutral-800 text-neutral-500 font-semibold py-2.5 rounded-xl text-sm cursor-not-allowed"
+                        onClick={() => {
+                            const subject = encodeURIComponent(`AuraTap Setup: ${clientId}`);
+                            const body = encodeURIComponent(
+                                `Hi,\n\nWelcome to AuraTap!\n\nYour 3D printed Wi-Fi base is ready. Please use the link below to set up your Wi-Fi credentials (SSID and Password) so your customers can connect instantly:\n\nSetup Link: ${setupUrl}\n\nBest regards,\nThe AuraTap Team`
+                            );
+                            window.location.href = `mailto:${ownerEmail || ''}?subject=${subject}&body=${body}`;
+                        }}
+                        className={`flex-1 font-semibold py-2.5 rounded-xl text-sm transition-all ${ownerEmail ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-neutral-800 text-neutral-500 border border-neutral-700 cursor-not-allowed'
+                            }`}
                     >
-                        Email Owner
+                        {ownerEmail ? 'Email Owner' : 'Add Email First'}
                     </button>
                 </div>
             </div>

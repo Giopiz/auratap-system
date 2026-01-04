@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { WifiCredentials } from '@/lib/wifi-service';
 import { QRCodeCanvas } from 'qrcode.react';
+import Image from 'next/image';
 
 interface WiFiCardProps {
     credentials: WifiCredentials;
@@ -92,7 +93,14 @@ export default function WiFiCard({ credentials }: WiFiCardProps) {
                         <QRCodeCanvas value={wifiString} size={256} level="H" />
                     </div>
                     {qrImageData ? (
-                        <img src={qrImageData} alt="Scan" className="w-32 h-32 rounded-lg" />
+                        <Image
+                            src={qrImageData}
+                            alt="Scan"
+                            width={128}
+                            height={128}
+                            className="rounded-lg"
+                            unoptimized
+                        />
                     ) : (
                         <div className="w-32 h-32 bg-neutral-200 animate-pulse rounded-lg" />
                     )}

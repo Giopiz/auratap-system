@@ -5,6 +5,7 @@ export interface WifiCredentials {
     securityType?: 'WPA' | 'WEP' | 'nopass';
     theme?: 'marble' | 'steel' | 'wood';
     venueType?: string;
+    ownerEmail?: string;
     lat?: number | null;
     lng?: number | null;
 }

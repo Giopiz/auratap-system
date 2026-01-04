@@ -39,13 +39,13 @@ export async function POST(
     await _context.params;
     try {
         const body = await request.json();
-        const { clientId, ssid, password, theme } = body;
+        const { clientId, ssid, password, theme, venueType, ownerEmail, lat, lng } = body;
 
         if (!clientId) {
             return NextResponse.json({ error: 'clientId is required' }, { status: 400 });
         }
 
-        await addClientRecord({ clientId, ssid, password, theme });
+        await addClientRecord({ clientId, ssid, password, theme, venueType, ownerEmail, lat, lng });
         return NextResponse.json({ success: true, message: 'Client added successfully' });
 
     } catch (error: unknown) {
@@ -65,13 +65,13 @@ export async function PATCH(
     await _context.params;
     try {
         const body = await request.json();
-        const { clientId, ssid, password, theme } = body;
+        const { clientId, ssid, password, theme, venueType, ownerEmail, lat, lng } = body;
 
         if (!clientId) {
             return NextResponse.json({ error: 'clientId is required' }, { status: 400 });
         }
 
-        await updateClientRecord(clientId, { ssid, password, theme });
+        await updateClientRecord(clientId, { ssid, password, theme, venueType, ownerEmail, lat, lng });
         return NextResponse.json({ success: true, message: 'Client updated successfully' });
 
     } catch (error: unknown) {

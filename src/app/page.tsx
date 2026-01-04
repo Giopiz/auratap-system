@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState, useEffect } from 'react';
 import WiFiCard from '@/components/WiFiCard';
 import Link from 'next/link';
@@ -28,13 +30,13 @@ export default function Home() {
           } else {
             setError("No AuraTap venue found at your current location.");
           }
-        } catch (_err) {
+        } catch {
           setError("Unable to connect to AuraTap Discovery.");
         } finally {
           setLoading(false);
         }
       },
-      (_err) => {
+      () => {
         setError("Please allow location access to discover local Wi-Fi.");
         setLoading(false);
       }

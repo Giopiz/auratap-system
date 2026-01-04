@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { WifiCredentials } from '@/lib/wifi-service';
 import { fetchSheetData } from '@/lib/sheets-server';
 import WiFiCard from '@/components/WiFiCard';

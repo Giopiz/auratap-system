@@ -23,7 +23,7 @@ export default function ClientToolkit({ clientId, ownerEmail, onClose }: ClientT
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-neutral-800 border border-neutral-700 w-full max-w-md rounded-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
-                <div className="p-6 border-b border-neutral-700 flex justify-between items-center">
+                <div className="p-4 md:p-6 border-b border-neutral-700 flex justify-between items-center">
                     <div>
                         <h2 className="text-xl font-bold text-white">Client Toolkit</h2>
                         <p className="text-neutral-400 text-sm font-mono">{clientId}</p>
@@ -35,7 +35,7 @@ export default function ClientToolkit({ clientId, ownerEmail, onClose }: ClientT
                     </button>
                 </div>
 
-                <div className="p-8 space-y-8">
+                <div className="p-6 md:p-8 space-y-6 md:space-y-8 max-h-[70vh] overflow-y-auto">
                     {/* QR Code Section */}
                     <div className="flex flex-col items-center gap-4">
                         <div className="bg-white p-4 rounded-xl shadow-lg">

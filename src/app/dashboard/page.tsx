@@ -118,8 +118,8 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="min-h-screen bg-neutral-900 text-white p-6 md:p-12">
-            <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+        <div className="min-h-screen bg-neutral-900 text-white p-4 md:p-12">
+            <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 md:mb-12">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Global Aura Discovery</h1>
                     <p className="text-neutral-400 text-sm mt-1">Mass Production Management System</p>
@@ -137,7 +137,7 @@ export default function DashboardPage() {
 
             {showAddForm && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <form onSubmit={handleAddClient} className="bg-neutral-800 border border-neutral-700 w-full max-w-md rounded-2xl p-8 space-y-6 animate-in fade-in zoom-in-95">
+                    <form onSubmit={handleAddClient} className="bg-neutral-800 border border-neutral-700 w-full max-w-md rounded-2xl p-6 md:p-8 space-y-6 animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto">
                         <h2 className="text-xl font-bold">Register Global Venue</h2>
 
                         <div className="space-y-4">
@@ -195,34 +195,36 @@ export default function DashboardPage() {
                 </div>
             ) : (
                 <div className="bg-neutral-800 rounded-2xl border border-neutral-700 overflow-hidden">
-                    <table className="w-full text-left">
-                        <thead className="bg-neutral-900">
-                            <tr>
-                                <th className="p-4 text-xs font-bold text-neutral-500 uppercase">Venue</th>
-                                <th className="p-4 text-xs font-bold text-neutral-500 uppercase">Type</th>
-                                <th className="p-4 text-xs font-bold text-neutral-500 uppercase">Network</th>
-                                <th className="p-4 text-xs font-bold text-neutral-500 uppercase">Owner Email</th>
-                                <th className="p-4 text-xs font-bold text-neutral-500 uppercase">Coordinates</th>
-                                <th className="p-4 text-right"></th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-neutral-700/50">
-                            {clients.map((client) => (
-                                <tr key={client.clientId} className="hover:bg-white/5">
-                                    <td className="p-4 font-bold text-green-400">{client.clientId}</td>
-                                    <td className="p-4 text-xs uppercase tracking-widest text-neutral-500">{client.venueType}</td>
-                                    <td className="p-4">{client.ssid}</td>
-                                    <td className="p-4 text-neutral-400 text-sm">{client.ownerEmail || <span className="opacity-30 italic">Not set</span>}</td>
-                                    <td className="p-4 text-[10px] font-mono text-neutral-500">
-                                        {client.lat}, {client.lng}
-                                    </td>
-                                    <td className="p-4 text-right">
-                                        <button onClick={() => setSelectedClient({ id: client.clientId, creds: client })} className="bg-blue-500/10 text-blue-400 px-3 py-1 rounded text-xs font-bold">Toolkit</button>
-                                    </td>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left min-w-[800px]">
+                            <thead className="bg-neutral-900">
+                                <tr>
+                                    <th className="p-4 text-xs font-bold text-neutral-500 uppercase">Venue</th>
+                                    <th className="p-4 text-xs font-bold text-neutral-500 uppercase">Type</th>
+                                    <th className="p-4 text-xs font-bold text-neutral-500 uppercase">Network</th>
+                                    <th className="p-4 text-xs font-bold text-neutral-500 uppercase">Owner Email</th>
+                                    <th className="p-4 text-xs font-bold text-neutral-500 uppercase">Coordinates</th>
+                                    <th className="p-4 text-right"></th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-neutral-700/50">
+                                {clients.map((client) => (
+                                    <tr key={client.clientId} className="hover:bg-white/5">
+                                        <td className="p-4 font-bold text-green-400">{client.clientId}</td>
+                                        <td className="p-4 text-xs uppercase tracking-widest text-neutral-500">{client.venueType}</td>
+                                        <td className="p-4">{client.ssid}</td>
+                                        <td className="p-4 text-neutral-400 text-sm">{client.ownerEmail || <span className="opacity-30 italic">Not set</span>}</td>
+                                        <td className="p-4 text-[10px] font-mono text-neutral-500">
+                                            {client.lat}, {client.lng}
+                                        </td>
+                                        <td className="p-4 text-right">
+                                            <button onClick={() => setSelectedClient({ id: client.clientId, creds: client })} className="bg-blue-500/10 text-blue-400 px-3 py-1 rounded text-xs font-bold">Toolkit</button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             )}
 

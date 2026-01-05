@@ -75,7 +75,7 @@ export default function Home() {
             <div className="space-y-2">
               <p className="text-white/80 text-lg font-light">No Venues Detected</p>
               <p className="text-white/40 text-sm leading-relaxed max-w-xs mx-auto">
-                We couldn't find an AuraTap spot at your current location. Please ensure you are at a participating venue.
+                We couldn&apos;t find an AuraTap spot at your current location. Please ensure you are at a participating venue.
               </p>
             </div>
 

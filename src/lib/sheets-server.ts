@@ -207,6 +207,7 @@ export async function addClientRecord(data: {
         if (findHeaderFor(keyMap.instagram)) rowData[findHeaderFor(keyMap.instagram)!] = data.instagram || '';
         if (findHeaderFor(keyMap.facebook)) rowData[findHeaderFor(keyMap.facebook)!] = data.facebook || '';
         if (findHeaderFor(keyMap.website)) rowData[findHeaderFor(keyMap.website)!] = data.website || '';
+        if (findHeaderFor(keyMap.radius)) rowData[findHeaderFor(keyMap.radius)!] = data.radius !== undefined ? String(data.radius) : '';
 
         console.log('[Sheets Server] Writing Row Data:', JSON.stringify(rowData));
 
@@ -249,6 +250,7 @@ export async function updateClientRecord(clientId: string, data: Partial<{
     instagram: string;
     facebook: string;
     website: string;
+    radius: number;
 }>) {
     try {
         const doc = await getDoc();
@@ -298,6 +300,7 @@ export async function updateClientRecord(clientId: string, data: Partial<{
         if (data.instagram !== undefined && findHeaderFor(keyMap.instagram)) row.set(findHeaderFor(keyMap.instagram)!, data.instagram);
         if (data.facebook !== undefined && findHeaderFor(keyMap.facebook)) row.set(findHeaderFor(keyMap.facebook)!, data.facebook);
         if (data.website !== undefined && findHeaderFor(keyMap.website)) row.set(findHeaderFor(keyMap.website)!, data.website);
+        if (data.radius !== undefined && findHeaderFor(keyMap.radius)) row.set(findHeaderFor(keyMap.radius)!, String(data.radius));
 
         // Handle coordinates carefully
         if (data.lat !== undefined && findHeaderFor(keyMap.lat)) {

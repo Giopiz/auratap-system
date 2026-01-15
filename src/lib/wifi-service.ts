@@ -13,6 +13,7 @@ export interface WifiCredentials {
     instagram?: string;
     facebook?: string;
     website?: string;
+    radius?: number;
 }
 
 // Mock data store - will be replaced by MCP Google Sheets later

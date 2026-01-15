@@ -28,7 +28,8 @@ export default function DashboardPage() {
         logoUrl: '',
         instagram: '',
         facebook: '',
-        website: ''
+        website: '',
+        radius: ''
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedClient, setSelectedClient] = useState<{ id: string; creds: WifiCredentials } | null>(null);
@@ -104,7 +105,7 @@ export default function DashboardPage() {
                 setNewClient({
                     clientId: '', ssid: '', password: '', theme: 'marble', venueType: 'cafe',
                     ownerEmail: '', lat: '', lng: '', logoUrl: '', instagram: '', facebook: '',
-                    website: ''
+                    website: '', radius: ''
                 });
 
                 // Fetch several times to ensure Google Sheets propagation
@@ -146,7 +147,7 @@ export default function DashboardPage() {
         <div className="min-h-screen bg-neutral-900 text-white p-4 md:p-12">
             <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 md:mb-12">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Global Aura Discovery</h1>
+                    <h1 className="text-3xl font-[family-name:var(--font-major-mono)] tracking-tight">AURATAP DASHBOARD</h1>
                     <p className="text-neutral-400 text-sm mt-1">Mass Production Management System</p>
                 </div>
                 <div className="flex flex-wrap gap-3">
@@ -172,7 +173,7 @@ export default function DashboardPage() {
             {showAddForm && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <form onSubmit={handleAddClient} className="bg-neutral-800 border border-neutral-700 w-full max-w-md rounded-2xl p-6 md:p-8 space-y-6 animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto">
-                        <h2 className="text-xl font-bold">Register Global Venue</h2>
+                        <h2 className="text-xl font-bold">Register Venue</h2>
 
                         <div className="space-y-4">
                             <input
@@ -211,6 +212,9 @@ export default function DashboardPage() {
                                 <input placeholder="Lat" value={newClient.lat} onChange={e => setNewClient({ ...newClient, lat: e.target.value })} className="bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2" />
                                 <input placeholder="Lng" value={newClient.lng} onChange={e => setNewClient({ ...newClient, lng: e.target.value })} className="bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2" />
                             </div>
+                            <div className="grid grid-cols-1 gap-4">
+                                <input placeholder="Radius (Meters)" type="number" value={newClient.radius} onChange={e => setNewClient({ ...newClient, radius: e.target.value })} className="bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2" />
+                            </div>
                             <button type="button" onClick={getCurrentLocation} className="text-[10px] text-green-500 uppercase tracking-widest font-bold">Use My Current Location</button>
 
                             <div className="pt-4 border-t border-neutral-700 space-y-4">
@@ -232,7 +236,7 @@ export default function DashboardPage() {
                         </div>
 
                         <button disabled={isSubmitting} type="submit" className="w-full bg-green-500 text-white font-bold py-3 rounded-xl">
-                            {isSubmitting ? 'Syncing...' : 'Register Global Venue'}
+                            {isSubmitting ? 'Syncing...' : 'Register Venue'}
                         </button>
                         <button type="button" onClick={() => setShowAddForm(false)} className="w-full text-xs text-neutral-500">Cancel</button>
                     </form>

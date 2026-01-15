@@ -10,9 +10,7 @@ export default function OwnerSetupPage() {
     const params = useParams();
     const clientId = params?.clientId as string;
 
-    const [isLoading, setIsLoading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
-    const [client, setClient] = useState<WifiCredentials | null>(null);
     const [formData, setFormData] = useState({
         ssid: '',
         password: '',
@@ -23,10 +21,10 @@ export default function OwnerSetupPage() {
 
     useEffect(() => {
         if (clientId) fetchBrief();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [clientId]);
 
     const fetchBrief = async () => {
-        setIsLoading(true);
         try {
             // We use the public discover API or a generic read to get current state
             // Ideally we should have a GET /api/sheets/[id] endpoint for singular item
@@ -35,7 +33,6 @@ export default function OwnerSetupPage() {
             const data = await res.json();
             const found = data.clients?.find((c: WifiCredentials) => c.clientId === clientId);
             if (found) {
-                setClient(found);
                 setFormData({
                     ssid: found.ssid || '',
                     password: found.password || '',
@@ -45,8 +42,6 @@ export default function OwnerSetupPage() {
             }
         } catch (err) {
             console.error(err);
-        } finally {
-            setIsLoading(false);
         }
     };
 
@@ -95,7 +90,7 @@ export default function OwnerSetupPage() {
                 const err = await res.json();
                 setMsg('❌ Error: ' + err.error);
             }
-        } catch (err) {
+        } catch {
             setMsg('❌ Network Error');
         } finally {
             setIsSaving(false);

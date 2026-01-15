@@ -99,8 +99,9 @@ export default function DashboardPage() {
                     password: newClient.password || undefined,
                     ownerEmail: newClient.ownerEmail || undefined,
                     lat: newClient.lat ? Number(newClient.lat) : undefined,
-                    lng: newClient.lng ? Number(newClient.lng) : undefined
-                } as any]);
+                    lng: newClient.lng ? Number(newClient.lng) : undefined,
+                    radius: newClient.radius ? Number(newClient.radius) : undefined
+                } as WifiCredentials & { clientId: string }]);
 
                 setNewClient({
                     clientId: '', ssid: '', password: '', theme: 'marble', venueType: 'cafe',

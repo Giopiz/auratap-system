@@ -151,6 +151,7 @@ export async function addClientRecord(data: {
     instagram?: string;
     facebook?: string;
     website?: string;
+    radius?: number;
 }) {
     try {
         console.log('[Sheets Server] Attempting to add client:', data.clientId);

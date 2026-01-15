@@ -214,7 +214,10 @@ export default function DashboardPage() {
                                 <input placeholder="Lng" value={newClient.lng} onChange={e => setNewClient({ ...newClient, lng: e.target.value })} className="bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2" />
                             </div>
                             <div className="grid grid-cols-1 gap-4">
-                                <input placeholder="Radius (Meters)" type="number" value={newClient.radius} onChange={e => setNewClient({ ...newClient, radius: e.target.value })} className="bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2" />
+                                <div>
+                                    <input placeholder="Radius (Meters)" type="number" value={newClient.radius} onChange={e => setNewClient({ ...newClient, radius: e.target.value })} className="bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2 w-full" />
+                                    <p className="text-[10px] text-neutral-500 mt-1 ml-1">The range in meters for users to discover this venue (e.g. 50 = 50m)</p>
+                                </div>
                             </div>
                             <button type="button" onClick={getCurrentLocation} className="text-[10px] text-green-500 uppercase tracking-widest font-bold">Use My Current Location</button>
 

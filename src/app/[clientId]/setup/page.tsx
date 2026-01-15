@@ -183,6 +183,55 @@ export default function OwnerSetupPage() {
                         </div>
                     </div>
 
+                    {/* Branding & Socials Section */}
+                    <div className="bg-black/20 p-4 rounded-xl border border-white/5 space-y-4">
+                        <label className="block text-sm font-bold text-neutral-400 uppercase tracking-widest">
+                            3. Branding & Socials
+                        </label>
+
+                        <div className="space-y-3">
+                            <div>
+                                <label className="text-xs text-neutral-500 mb-1 block">Logo Image URL</label>
+                                <input
+                                    value={formData.logoUrl}
+                                    onChange={e => setFormData({ ...formData, logoUrl: e.target.value })}
+                                    placeholder="https://"
+                                    className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3 focus:border-green-500 outline-none"
+                                />
+                                <p className="text-[10px] text-neutral-500 mt-1">Direct link to logo (PNG/JPG)</p>
+                            </div>
+                            <div>
+                                <label className="text-xs text-neutral-500 mb-1 block">Website</label>
+                                <input
+                                    value={formData.website}
+                                    onChange={e => setFormData({ ...formData, website: e.target.value })}
+                                    placeholder="https://"
+                                    className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3 focus:border-green-500 outline-none"
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="text-xs text-neutral-500 mb-1 block">Instagram</label>
+                                    <input
+                                        value={formData.instagram}
+                                        onChange={e => setFormData({ ...formData, instagram: e.target.value })}
+                                        placeholder="@handle"
+                                        className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3 focus:border-green-500 outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-neutral-500 mb-1 block">Facebook</label>
+                                    <input
+                                        value={formData.facebook}
+                                        onChange={e => setFormData({ ...formData, facebook: e.target.value })}
+                                        placeholder="Profile URL"
+                                        className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3 focus:border-green-500 outline-none"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <button
                         type="submit"
                         disabled={isSaving}

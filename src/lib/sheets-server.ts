@@ -191,7 +191,7 @@ export async function addClientRecord(data: {
             instagram: ['instagram', 'ig', 'insta'],
             facebook: ['facebook', 'fb'],
             website: ['website', 'site', 'url'],
-            merchLink: ['merch', 'shop', 'merchandise', 'store']
+            radius: ['radius', 'range', 'dist', 'distance']
         };
 
         // Fill the rowData object using the FOUND headers
@@ -283,7 +283,7 @@ export async function updateClientRecord(clientId: string, data: Partial<{
             instagram: ['instagram', 'ig', 'insta'],
             facebook: ['facebook', 'fb'],
             website: ['website', 'site', 'url'],
-            merchLink: ['merch', 'shop', 'merchandise', 'store']
+            radius: ['radius', 'range', 'dist', 'distance']
         };
 
         const rows = await sheet.getRows();

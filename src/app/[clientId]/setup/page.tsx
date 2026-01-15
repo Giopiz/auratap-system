@@ -15,7 +15,11 @@ export default function OwnerSetupPage() {
         ssid: '',
         password: '',
         lat: '',
-        lng: ''
+        lng: '',
+        logoUrl: '',
+        website: '',
+        instagram: '',
+        facebook: ''
     });
     const [msg, setMsg] = useState('');
 
@@ -37,7 +41,11 @@ export default function OwnerSetupPage() {
                     ssid: found.ssid || '',
                     password: found.password || '',
                     lat: found.lat ? String(found.lat) : '',
-                    lng: found.lng ? String(found.lng) : ''
+                    lng: found.lng ? String(found.lng) : '',
+                    logoUrl: found.logoUrl || '',
+                    website: found.website || '',
+                    instagram: found.instagram || '',
+                    facebook: found.facebook || ''
                 });
             }
         } catch (err) {
@@ -80,7 +88,11 @@ export default function OwnerSetupPage() {
                     ssid: formData.ssid,
                     password: formData.password,
                     lat: formData.lat,
-                    lng: formData.lng
+                    lng: formData.lng,
+                    logoUrl: formData.logoUrl,
+                    website: formData.website,
+                    instagram: formData.instagram,
+                    facebook: formData.facebook
                 })
             });
 
@@ -139,7 +151,7 @@ export default function OwnerSetupPage() {
                             onClick={handleGetLocation}
                             className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
                         >
-                            📍 Capture Current GPS
+                            📍 Localize Aura Radius
                         </button>
                     </div>
 

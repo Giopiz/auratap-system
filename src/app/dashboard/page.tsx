@@ -24,7 +24,11 @@ export default function DashboardPage() {
         venueType: 'cafe',
         ownerEmail: '',
         lat: '',
-        lng: ''
+        lng: '',
+        logoUrl: '',
+        instagram: '',
+        facebook: '',
+        website: ''
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedClient, setSelectedClient] = useState<{ id: string; creds: WifiCredentials } | null>(null);
@@ -32,7 +36,7 @@ export default function DashboardPage() {
     const fetchClients = async () => {
         setIsLoading(true);
         try {
-            const res = await fetch(`/api/sheets/${SHEET_ID}/data`);
+            const res = await fetch(`/api/sheets/${SHEET_ID}/data?t=${Date.now()}`, { cache: 'no-store' });
             const data = await res.json();
             if (data.clients) {
                 setClients(data.clients);
@@ -84,8 +88,29 @@ export default function DashboardPage() {
 
             if (res.ok) {
                 setShowAddForm(false);
-                setNewClient({ clientId: '', ssid: '', password: '', theme: 'marble', venueType: 'cafe', ownerEmail: '', lat: '', lng: '' });
-                fetchClients();
+
+                // Optimistic Update: Add to list immediately
+                setClients(prev => [...prev, {
+                    ...newClient,
+                    clientId: newClient.clientId.toLowerCase(),
+                    // ensure fields match the type
+                    ssid: newClient.ssid || undefined,
+                    password: newClient.password || undefined,
+                    ownerEmail: newClient.ownerEmail || undefined,
+                    lat: newClient.lat ? Number(newClient.lat) : undefined,
+                    lng: newClient.lng ? Number(newClient.lng) : undefined
+                } as any]);
+
+                setNewClient({
+                    clientId: '', ssid: '', password: '', theme: 'marble', venueType: 'cafe',
+                    ownerEmail: '', lat: '', lng: '', logoUrl: '', instagram: '', facebook: '',
+                    website: ''
+                });
+
+                // Fetch several times to ensure Google Sheets propagation
+                setTimeout(fetchClients, 1000);
+                setTimeout(fetchClients, 3000);
+                setTimeout(fetchClients, 5000);
             } else {
                 const errData = await res.json();
                 alert(`Error: ${errData.error || 'Failed to add'}`);
@@ -130,6 +155,15 @@ export default function DashboardPage() {
                         className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2"
                     >
                         + Add New Venue
+                    </button>
+                    <button
+                        onClick={fetchClients}
+                        className="bg-neutral-800 hover:bg-neutral-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 border border-neutral-700"
+                    >
+                        <svg className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Refresh
                     </button>
                     <a href={SHEET_URL} target="_blank" className="text-sm bg-neutral-800 border border-neutral-700 px-4 py-2 rounded-lg">Source Sheet</a>
                 </div>
@@ -178,6 +212,23 @@ export default function DashboardPage() {
                                 <input placeholder="Lng" value={newClient.lng} onChange={e => setNewClient({ ...newClient, lng: e.target.value })} className="bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2" />
                             </div>
                             <button type="button" onClick={getCurrentLocation} className="text-[10px] text-green-500 uppercase tracking-widest font-bold">Use My Current Location</button>
+
+                            <div className="pt-4 border-t border-neutral-700 space-y-4">
+                                <h3 className="text-xs font-bold uppercase tracking-widest text-neutral-500">Personalization & Socials</h3>
+                                <input
+                                    placeholder="Logo URL (Direct Image Link)"
+                                    value={newClient.logoUrl}
+                                    onChange={e => setNewClient({ ...newClient, logoUrl: e.target.value })}
+                                    className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2"
+                                />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <input placeholder="Instagram URL" value={newClient.instagram} onChange={e => setNewClient({ ...newClient, instagram: e.target.value })} className="bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2" />
+                                    <input placeholder="Facebook URL" value={newClient.facebook} onChange={e => setNewClient({ ...newClient, facebook: e.target.value })} className="bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2" />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <input placeholder="Website URL" value={newClient.website} onChange={e => setNewClient({ ...newClient, website: e.target.value })} className="bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-2" />
+                                </div>
+                            </div>
                         </div>
 
                         <button disabled={isSubmitting} type="submit" className="w-full bg-green-500 text-white font-bold py-3 rounded-xl">
@@ -231,7 +282,7 @@ export default function DashboardPage() {
             {selectedClient && (
                 <ClientToolkit
                     clientId={selectedClient.id}
-                    ownerEmail={selectedClient.creds.ownerEmail}
+                    credentials={selectedClient.creds}
                     onClose={() => setSelectedClient(null)}
                 />
             )}

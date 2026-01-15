@@ -1,113 +1,195 @@
 'use client';
 
-import { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+export const dynamic = 'force-dynamic';
 
-export default function CustomerSetupPage() {
+import { useState, useEffect } from 'react';
+import { WifiCredentials } from '@/lib/wifi-service';
+import { useParams } from 'next/navigation';
+
+export default function OwnerSetupPage() {
     const params = useParams();
-    const router = useRouter();
     const clientId = params?.clientId as string;
 
-    const [ssid, setSsid] = useState('');
-    const [password, setPassword] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isSuccess, setIsSuccess] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [client, setClient] = useState<WifiCredentials | null>(null);
+    const [formData, setFormData] = useState({
+        ssid: '',
+        password: '',
+        lat: '',
+        lng: ''
+    });
+    const [msg, setMsg] = useState('');
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!ssid) return alert('Wi-Fi Name (SSID) is required');
+    useEffect(() => {
+        if (clientId) fetchBrief();
+    }, [clientId]);
 
-        setIsSubmitting(true);
+    const fetchBrief = async () => {
+        setIsLoading(true);
         try {
-            const res = await fetch(`/api/sheets/1Wtid4l81oQvqdqY1wXk_cOgF6moodVRkzKj9V7ORQLQ/data`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ clientId, ssid, password })
-            });
-
-            if (res.ok) {
-                setIsSuccess(true);
-                setTimeout(() => router.push(`/${clientId}`), 3000);
-            } else {
-                alert('Connection error. Please try again.');
+            // We use the public discover API or a generic read to get current state
+            // Ideally we should have a GET /api/sheets/[id] endpoint for singular item
+            // For now, let's just assume we start blank or fetch from the list if possible
+            const res = await fetch(`/api/sheets/generic_id/data?t=${Date.now()}`, { cache: 'no-store' }); // Using generic ID access
+            const data = await res.json();
+            const found = data.clients?.find((c: WifiCredentials) => c.clientId === clientId);
+            if (found) {
+                setClient(found);
+                setFormData({
+                    ssid: found.ssid || '',
+                    password: found.password || '',
+                    lat: found.lat ? String(found.lat) : '',
+                    lng: found.lng ? String(found.lng) : ''
+                });
             }
-        } catch {
-            alert('Failed to update. Please check your internet.');
+        } catch (err) {
+            console.error(err);
         } finally {
-            setIsSubmitting(false);
+            setIsLoading(false);
         }
     };
 
-    if (isSuccess) {
-        return (
-            <div className="min-h-screen bg-neutral-900 flex items-center justify-center p-4">
-                <div className="text-center space-y-4 animate-in fade-in zoom-in duration-500">
-                    <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-green-500/20">
-                        <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                    </div>
-                    <h1 className="text-2xl font-bold text-white">Setup Complete!</h1>
-                    <p className="text-neutral-400">Your AuraTap is now active. Redirecting to your landing page...</p>
-                </div>
-            </div>
+    const handleGetLocation = () => {
+        if (!navigator.geolocation) return alert('Geolocation is not supported by your browser');
+
+        setIsSaving(true);
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                setFormData(prev => ({
+                    ...prev,
+                    lat: String(pos.coords.latitude),
+                    lng: String(pos.coords.longitude)
+                }));
+                setIsSaving(false);
+            },
+            (err) => {
+                alert('Error getting location: ' + err.message);
+                setIsSaving(false);
+            },
+            { enableHighAccuracy: true }
         );
-    }
+    };
+
+    const handleSave = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSaving(true);
+        setMsg('');
+
+        try {
+            const res = await fetch(`/api/sheets/generic_sheet_id/data`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    clientId,
+                    ssid: formData.ssid,
+                    password: formData.password,
+                    lat: formData.lat,
+                    lng: formData.lng
+                })
+            });
+
+            if (res.ok) {
+                setMsg('✅ Settings updated successfully!');
+            } else {
+                const err = await res.json();
+                setMsg('❌ Error: ' + err.error);
+            }
+        } catch (err) {
+            setMsg('❌ Network Error');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    if (!clientId) return <div className="p-8 text-white">Invalid Client ID</div>;
 
     return (
-        <div className="min-h-screen bg-neutral-900 flex flex-col items-center justify-center p-6 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-neutral-800 to-neutral-950">
-            <div className="w-full max-w-md space-y-8">
-                <div className="text-center">
-                    <div className="text-green-500 font-bold tracking-[0.2em] text-xs uppercase mb-2">AuraTap Onboarding</div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Configure Your WiFi</h1>
-                    <p className="text-neutral-400 text-sm">Enter your cafe&apos;s Wi-Fi details below to activate your one-tap connect page.</p>
+        <div className="min-h-screen bg-neutral-900 text-white p-6 flex items-center justify-center">
+            <div className="w-full max-w-md bg-neutral-800 border border-neutral-700 rounded-2xl p-8 shadow-2xl">
+                <div className="text-center mb-8">
+                    <h1 className="text-2xl font-bold mb-2">Venue Setup</h1>
+                    <div className="inline-block bg-green-500/10 text-green-400 px-3 py-1 rounded-full text-xs font-mono">
+                        {clientId}
+                    </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="bg-neutral-800/50 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl space-y-6">
-                    <div className="space-y-4">
-                        <div className="space-y-1.5">
-                            <label className="text-xs text-neutral-500 uppercase font-bold tracking-wider">Wi-Fi Name (SSID)</label>
+                <form onSubmit={handleSave} className="space-y-6">
+                    {/* Location Section */}
+                    <div className="bg-black/20 p-4 rounded-xl border border-white/5 space-y-4">
+                        <label className="block text-sm font-bold text-neutral-400 uppercase tracking-widest">
+                            1. Set Location
+                        </label>
+                        <p className="text-xs text-neutral-500">
+                            Stand in the center of your venue and tap the button below.
+                        </p>
+
+                        <div className="grid grid-cols-2 gap-4">
                             <input
-                                required
-                                placeholder="Exact name of your Wi-Fi"
-                                value={ssid}
-                                onChange={e => setSsid(e.target.value)}
-                                className="w-full bg-neutral-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-green-500 outline-none transition-all"
+                                disabled
+                                placeholder="Lat"
+                                value={formData.lat}
+                                className="bg-neutral-900 border border-neutral-700 rounded px-3 py-2 text-xs text-neutral-500"
+                            />
+                            <input
+                                disabled
+                                placeholder="Lng"
+                                value={formData.lng}
+                                className="bg-neutral-900 border border-neutral-700 rounded px-3 py-2 text-xs text-neutral-500"
                             />
                         </div>
 
-                        <div className="space-y-1.5">
-                            <label className="text-xs text-neutral-500 uppercase font-bold tracking-wider">Wi-Fi Password</label>
-                            <input
-                                type="text"
-                                placeholder="Leave empty if none"
-                                value={password}
-                                onChange={e => setPassword(e.target.value)}
-                                className="w-full bg-neutral-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-green-500 outline-none transition-all"
-                            />
-                            <p className="text-[10px] text-neutral-600">Note: This is stored securely in your private Google Sheet.</p>
+                        <button
+                            type="button"
+                            onClick={handleGetLocation}
+                            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                        >
+                            📍 Capture Current GPS
+                        </button>
+                    </div>
+
+                    {/* WiFi Section */}
+                    <div className="bg-black/20 p-4 rounded-xl border border-white/5 space-y-4">
+                        <label className="block text-sm font-bold text-neutral-400 uppercase tracking-widest">
+                            2. WiFi Details
+                        </label>
+
+                        <div className="space-y-3">
+                            <div>
+                                <label className="text-xs text-neutral-500 mb-1 block">Network Name (SSID)</label>
+                                <input
+                                    value={formData.ssid}
+                                    onChange={e => setFormData({ ...formData, ssid: e.target.value })}
+                                    placeholder="e.g. Cafe_Guest_Free"
+                                    className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3 focus:border-green-500 outline-none"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-xs text-neutral-500 mb-1 block">Password</label>
+                                <input
+                                    value={formData.password}
+                                    onChange={e => setFormData({ ...formData, password: e.target.value })}
+                                    placeholder="Leave empty if open network"
+                                    className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-4 py-3 focus:border-green-500 outline-none"
+                                />
+                            </div>
                         </div>
                     </div>
 
                     <button
-                        disabled={isSubmitting}
                         type="submit"
-                        className="w-full bg-white hover:bg-neutral-200 disabled:bg-neutral-700 text-black font-bold py-4 rounded-2xl transition-all shadow-xl active:scale-[0.98]"
+                        disabled={isSaving}
+                        className="w-full bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white font-bold py-4 rounded-xl text-lg shadow-lg shadow-green-500/20"
                     >
-                        {isSubmitting ? 'Activating...' : 'Activate AuraTap'}
+                        {isSaving ? 'Saving...' : 'Save Configuration'}
                     </button>
 
-                    <p className="text-center text-[11px] text-neutral-600">
-                        Managing: <span className="text-neutral-400 font-mono">{clientId}</span>
-                    </p>
+                    {msg && (
+                        <div className={`p-4 rounded-lg text-center font-bold ${msg.includes('Error') ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
+                            {msg}
+                        </div>
+                    )}
                 </form>
-
-                <div className="text-center pt-8">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/5">
-                        <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                        <span className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold">Encrypted Connection</span>
-                    </div>
-                </div>
             </div>
         </div>
     );

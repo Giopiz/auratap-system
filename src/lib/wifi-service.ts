@@ -9,6 +9,10 @@ export interface WifiCredentials {
     ownerEmail?: string;
     lat?: number | null;
     lng?: number | null;
+    logoUrl?: string;
+    instagram?: string;
+    facebook?: string;
+    website?: string;
 }
 
 // Mock data store - will be replaced by MCP Google Sheets later

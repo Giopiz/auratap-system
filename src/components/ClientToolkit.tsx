@@ -2,17 +2,24 @@
 
 import { QRCodeCanvas } from 'qrcode.react';
 import { useState } from 'react';
+import { WifiCredentials } from '@/lib/wifi-service';
 
 interface ClientToolkitProps {
     clientId: string;
-    ownerEmail?: string;
+    credentials?: WifiCredentials;
     onClose: () => void;
 }
 
-export default function ClientToolkit({ clientId, ownerEmail, onClose }: ClientToolkitProps) {
+export default function ClientToolkit({ clientId, credentials, onClose }: ClientToolkitProps) {
     const [copied, setCopied] = useState(false);
+    const [qrType, setQrType] = useState<'landing' | 'wifi'>('landing');
+
     const landingUrl = typeof window !== 'undefined' ? `${window.location.origin}/${clientId}` : '';
     const setupUrl = typeof window !== 'undefined' ? `${window.location.origin}/${clientId}/setup` : '';
+
+    const wifiString = credentials?.ssid
+        ? `WIFI:S:${credentials.ssid};P:${credentials.password || ''};T:${credentials.securityType || 'WPA'};;`
+        : '';
 
     const handleCopyNfc = () => {
         navigator.clipboard.writeText(landingUrl);
@@ -37,17 +44,39 @@ export default function ClientToolkit({ clientId, ownerEmail, onClose }: ClientT
 
                 <div className="p-6 md:p-8 space-y-6 md:space-y-8 max-h-[70vh] overflow-y-auto">
                     {/* QR Code Section */}
-                    <div className="flex flex-col items-center gap-4">
-                        <div className="bg-white p-4 rounded-xl shadow-lg">
+                    <div className="flex flex-col items-center gap-6">
+                        <div className="flex bg-neutral-900 p-1 rounded-xl border border-neutral-700 w-full">
+                            <button
+                                onClick={() => setQrType('landing')}
+                                className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${qrType === 'landing' ? 'bg-white text-black' : 'text-neutral-500 hover:text-neutral-300'}`}
+                            >
+                                Landing Page
+                            </button>
+                            <button
+                                onClick={() => setQrType('wifi')}
+                                className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${qrType === 'wifi' ? 'bg-white text-black' : 'text-neutral-500 hover:text-neutral-300'}`}
+                            >
+                                Direct WiFi
+                            </button>
+                        </div>
+
+                        <div className="bg-white p-4 rounded-xl shadow-lg relative group">
                             <QRCodeCanvas
-                                value={landingUrl}
+                                value={qrType === 'landing' ? landingUrl : wifiString}
                                 size={180}
                                 level="H"
                                 includeMargin={false}
                             />
+                            {qrType === 'wifi' && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-white/10 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity rounded-xl">
+                                    <span className="bg-black text-white text-[10px] px-2 py-1 rounded font-bold uppercase tracking-tighter">Direct Connect</span>
+                                </div>
+                            )}
                         </div>
-                        <p className="text-sm text-neutral-400 text-center">
-                            Point a camera here to open the landing page instantly.
+                        <p className="text-sm text-neutral-400 text-center px-4 leading-relaxed">
+                            {qrType === 'landing'
+                                ? "Point a camera here to open the landing page instantly."
+                                : "No Internet? Use this QR to connect directly to the WiFi first."}
                         </p>
                     </div>
 
@@ -115,12 +144,12 @@ export default function ClientToolkit({ clientId, ownerEmail, onClose }: ClientT
                             const body = encodeURIComponent(
                                 `Hi,\n\nWelcome to AuraTap!\n\nYour 3D printed Wi-Fi base is ready. Please use the link below to set up your Wi-Fi credentials (SSID and Password) so your customers can connect instantly:\n\nSetup Link: ${setupUrl}\n\nBest regards,\nThe AuraTap Team`
                             );
-                            window.location.href = `mailto:${ownerEmail || ''}?subject=${subject}&body=${body}`;
+                            window.location.href = `mailto:${credentials?.ownerEmail || ''}?subject=${subject}&body=${body}`;
                         }}
-                        className={`flex-1 font-semibold py-2.5 rounded-xl text-sm transition-all ${ownerEmail ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-neutral-800 text-neutral-500 border border-neutral-700 cursor-not-allowed'
+                        className={`flex-1 font-semibold py-2.5 rounded-xl text-sm transition-all ${credentials?.ownerEmail ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-neutral-800 text-neutral-500 border border-neutral-700 cursor-not-allowed'
                             }`}
                     >
-                        {ownerEmail ? 'Email Owner' : 'Add Email First'}
+                        {credentials?.ownerEmail ? 'Email Owner' : 'Add Email First'}
                     </button>
                 </div>
             </div>

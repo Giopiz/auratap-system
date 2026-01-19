@@ -55,7 +55,7 @@ function getRowValue(row: GoogleSpreadsheetRow, key: string): string {
         clientid: ['clientid', 'client_id', 'id', 'user_id', 'venueid'],
         ssid: ['ssid', 'wifi', 'wifi_name', 'network', 'wifiname'],
         password: ['password', 'pass', 'wifi_password', 'key', 'wifipassword'],
-        logoUrl: ['logo', 'logourl', 'image', 'brand', 'icon'],
+        logourl: ['logo', 'logourl', 'image', 'brand', 'icon'],
         instagram: ['instagram', 'ig', 'insta', 'social1'],
         facebook: ['facebook', 'fb', 'social2'],
         website: ['website', 'site', 'url', 'link'],

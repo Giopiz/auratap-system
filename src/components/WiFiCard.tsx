@@ -32,14 +32,17 @@ export default function WiFiCard({ credentials }: WiFiCardProps) {
     const wifiString = `WIFI:S:${ssid};P:${password};T:${credentials.securityType || 'WPA'};;`;
 
     const handleConnect = () => {
+        // Copy to clipboard for all - it's the safest fallback
+        navigator.clipboard.writeText(credentials.password || '');
+        setStatus('copying');
+
         if (!isIos) {
+            // Try direct join on Android (might be blocked by browser)
             window.location.href = wifiString;
-            setStatus('connected');
-        } else {
-            navigator.clipboard.writeText(credentials.password || '');
-            setStatus('copying');
-            setTimeout(() => setStatus('idle'), 5000);
+            // status is already set to 'copying' which shows the toast
         }
+
+        setTimeout(() => setStatus('idle'), 5000);
     };
 
     // Venue Icons
@@ -62,6 +65,24 @@ export default function WiFiCard({ credentials }: WiFiCardProps) {
                 return (
                     <svg className="w-6 h-6 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                    </svg>
+                );
+            case 'house':
+                return (
+                    <svg className="w-6 h-6 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                );
+            case 'gym':
+                return (
+                    <svg className="w-6 h-6 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                    </svg>
+                );
+            case 'other':
+                return (
+                    <svg className="w-6 h-6 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
                 );
             default: // cafe
@@ -101,8 +122,8 @@ export default function WiFiCard({ credentials }: WiFiCardProps) {
                 {credentials.venueType || 'Premium'} Guest Network
             </p>
 
-            <div className="mb-8 space-y-6">
-                <div className="relative inline-block p-4 bg-white rounded-2xl shadow-inner">
+            <div className="mb-8 flex flex-col items-center gap-6">
+                <div className="relative p-4 bg-white rounded-2xl shadow-inner">
                     <div className="sr-only">
                         <QRCodeCanvas value={wifiString} size={256} level="H" />
                     </div>
@@ -126,14 +147,14 @@ export default function WiFiCard({ credentials }: WiFiCardProps) {
                             Password Copied! ✨
                         </p>
                     ) : (
-                        <p className="text-white/60 text-xs uppercase tracking-[0.1em]">
+                        <p className="text-white/60 text-xs uppercase tracking-[0.1em] text-center">
                             {isIos ? "Instant Connection Helper" : "One-Tap Connect"}
                         </p>
                     )}
                 </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4 px-4">
                 <button
                     onClick={handleConnect}
                     disabled={!credentials.ssid}
@@ -158,7 +179,7 @@ export default function WiFiCard({ credentials }: WiFiCardProps) {
 
                 {isIos && status === 'copying' && (
                     <div className="pt-4 animate-in fade-in slide-in-from-top-2 duration-500">
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-sm font-medium">
+                        <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-white text-sm font-medium text-center">
                             1. Open Settings &gt; Wi-Fi <br />
                             2. Tap <b>&quot;{credentials.ssid}&quot;</b> <br />
                             3. Tap <b>Paste</b> when prompted!

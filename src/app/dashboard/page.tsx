@@ -199,6 +199,9 @@ export default function DashboardPage() {
                                 <option value="bar">Bar</option>
                                 <option value="restaurant">Restaurant</option>
                                 <option value="hotel">Hotel</option>
+                                <option value="house">House</option>
+                                <option value="gym">Gym</option>
+                                <option value="other">Other</option>
                             </select>
 
                             <input

@@ -50,11 +50,16 @@ function getRowValue(row: GoogleSpreadsheetRow, key: string): string {
 
     // Define aliases for common fields
     const aliases: Record<string, string[]> = {
-        lat: ['lat', 'latitude', 'lattitude', 'y'],
-        lng: ['lng', 'longitude', 'longtitude', 'long', 'x'],
-        clientid: ['clientid', 'client_id', 'id', 'user_id'],
-        ssid: ['ssid', 'wifi', 'wifi_name', 'network'],
-        password: ['password', 'pass', 'wifi_password', 'key'],
+        lat: ['lat', 'latitude', 'lattitude'], // Removed 'y' to prevent matching 'Security'
+        lng: ['lng', 'longitude', 'longtitude', 'long'], // Removed 'x'
+        clientid: ['clientid', 'client_id', 'id', 'user_id', 'venueid'],
+        ssid: ['ssid', 'wifi', 'wifi_name', 'network', 'wifiname'],
+        password: ['password', 'pass', 'wifi_password', 'key', 'wifipassword'],
+        logoUrl: ['logo', 'logourl', 'image', 'brand', 'icon'],
+        instagram: ['instagram', 'ig', 'insta', 'social1'],
+        facebook: ['facebook', 'fb', 'social2'],
+        website: ['website', 'site', 'url', 'link'],
+        radius: ['radius', 'range', 'dist', 'distance']
     };
 
     const searchKeys = aliases[normalizedKey] || [normalizedKey];
@@ -98,6 +103,7 @@ function mapRowToVenue(row: GoogleSpreadsheetRow): WifiCredentials {
         instagram: getRowValue(row, 'instagram'),
         facebook: getRowValue(row, 'facebook'),
         website: getRowValue(row, 'website'),
+        radius: parseCoordinate(getRowValue(row, 'radius')) || 100,
     };
 }
 
@@ -170,7 +176,11 @@ export async function addClientRecord(data: {
             const lowerNames = possibleNames.map(n => n.toLowerCase());
             return headers.find(h => {
                 const normH = h.toString().toLowerCase().trim().replace(/_/g, '');
-                return lowerNames.some(n => normH === n || normH.includes(n));
+                // Strict check: Either exact match or if multi-word, it must be its own word
+                return lowerNames.some(n => {
+                    if (n.length <= 2) return normH === n; // Strict for single letters
+                    return normH === n || normH.includes(n);
+                });
             });
         };
 
@@ -185,12 +195,12 @@ export async function addClientRecord(data: {
             theme: ['theme', 'style', 'color'],
             venueType: ['venuetype', 'type', 'category'],
             ownerEmail: ['owneremail', 'email', 'contact', 'owner'],
-            lat: ['lat', 'latitude', 'y'],
-            lng: ['lng', 'longitude', 'long', 'x'],
-            logoUrl: ['logo', 'logourl', 'image'],
-            instagram: ['instagram', 'ig', 'insta'],
-            facebook: ['facebook', 'fb'],
-            website: ['website', 'site', 'url'],
+            lat: ['lat', 'latitude'],
+            lng: ['lng', 'longitude', 'long'],
+            logoUrl: ['logo', 'logourl', 'image', 'brand', 'icon'],
+            instagram: ['instagram', 'ig', 'insta', 'social1'],
+            facebook: ['facebook', 'fb', 'social2'],
+            website: ['website', 'site', 'url', 'link'],
             radius: ['radius', 'range', 'dist', 'distance']
         };
 
@@ -265,7 +275,11 @@ export async function updateClientRecord(clientId: string, data: Partial<{
             const lowerNames = possibleNames.map(n => n.toLowerCase());
             return headers.find(h => {
                 const normH = h.toString().toLowerCase().trim().replace(/_/g, '');
-                return lowerNames.some(n => normH === n || normH.includes(n));
+                // Strict check: Either exact match or if multi-word, it must be its own word
+                return lowerNames.some(n => {
+                    if (n.length <= 2) return normH === n; // Strict for single letters
+                    return normH === n || normH.includes(n);
+                });
             });
         };
 
@@ -277,12 +291,12 @@ export async function updateClientRecord(clientId: string, data: Partial<{
             theme: ['theme', 'style', 'color'],
             venueType: ['venuetype', 'type', 'category'],
             ownerEmail: ['owneremail', 'email', 'contact', 'owner'],
-            lat: ['lat', 'latitude', 'y'],
-            lng: ['lng', 'longitude', 'long', 'x'],
-            logoUrl: ['logo', 'logourl', 'image'],
-            instagram: ['instagram', 'ig', 'insta'],
-            facebook: ['facebook', 'fb'],
-            website: ['website', 'site', 'url'],
+            lat: ['lat', 'latitude'],
+            lng: ['lng', 'longitude', 'long'],
+            logoUrl: ['logo', 'logourl', 'image', 'brand', 'icon'],
+            instagram: ['instagram', 'ig', 'insta', 'social1'],
+            facebook: ['facebook', 'fb', 'social2'],
+            website: ['website', 'site', 'url', 'link'],
             radius: ['radius', 'range', 'dist', 'distance']
         };
 

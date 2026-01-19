@@ -39,7 +39,7 @@ export async function POST(
     await _context.params;
     try {
         const body = await request.json();
-        const { clientId, ssid, password, theme, venueType, ownerEmail, lat, lng } = body;
+        const { clientId, ssid, password, theme, venueType, ownerEmail, lat, lng, logoUrl, instagram, facebook, website, radius } = body;
 
         if (!clientId) {
             return NextResponse.json({ error: 'clientId is required' }, { status: 400 });
@@ -53,7 +53,12 @@ export async function POST(
             venueType,
             ownerEmail,
             lat: lat ? parseFloat(lat) : undefined,
-            lng: lng ? parseFloat(lng) : undefined
+            lng: lng ? parseFloat(lng) : undefined,
+            logoUrl,
+            instagram,
+            facebook,
+            website,
+            radius: radius ? parseFloat(radius) : undefined
         });
         return NextResponse.json({ success: true, message: 'Client added successfully' });
 
@@ -74,7 +79,7 @@ export async function PATCH(
     await _context.params;
     try {
         const body = await request.json();
-        const { clientId, ssid, password, theme, venueType, ownerEmail, lat, lng } = body;
+        const { clientId, ssid, password, theme, venueType, ownerEmail, lat, lng, logoUrl, instagram, facebook, website, radius } = body;
 
         if (!clientId) {
             return NextResponse.json({ error: 'clientId is required' }, { status: 400 });
@@ -87,7 +92,12 @@ export async function PATCH(
             venueType,
             ownerEmail,
             lat: lat !== undefined ? Number(lat) : undefined,
-            lng: lng !== undefined ? Number(lng) : undefined
+            lng: lng !== undefined ? Number(lng) : undefined,
+            logoUrl,
+            instagram,
+            facebook,
+            website,
+            radius: radius !== undefined ? Number(radius) : undefined
         });
         return NextResponse.json({ success: true, message: 'Client updated successfully' });
 

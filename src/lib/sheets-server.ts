@@ -158,6 +158,7 @@ export async function addClientRecord(data: {
     facebook?: string;
     website?: string;
     radius?: number;
+    securityType?: string;
 }) {
     try {
         console.log('[Sheets Server] Attempting to add client:', data.clientId);
@@ -208,7 +209,7 @@ export async function addClientRecord(data: {
         if (findHeaderFor(keyMap.clientId)) rowData[findHeaderFor(keyMap.clientId)!] = data.clientId;
         if (findHeaderFor(keyMap.ssid)) rowData[findHeaderFor(keyMap.ssid)!] = data.ssid || '';
         if (findHeaderFor(keyMap.password)) rowData[findHeaderFor(keyMap.password)!] = data.password || '';
-        if (findHeaderFor(keyMap.securityType)) rowData[findHeaderFor(keyMap.securityType)!] = 'WPA';
+        if (findHeaderFor(keyMap.securityType)) rowData[findHeaderFor(keyMap.securityType)!] = data.securityType || 'WPA';
         if (findHeaderFor(keyMap.theme)) rowData[findHeaderFor(keyMap.theme)!] = data.theme || 'marble';
         if (findHeaderFor(keyMap.venueType)) rowData[findHeaderFor(keyMap.venueType)!] = data.venueType || 'cafe';
         if (findHeaderFor(keyMap.ownerEmail)) rowData[findHeaderFor(keyMap.ownerEmail)!] = data.ownerEmail || '';
@@ -262,6 +263,7 @@ export async function updateClientRecord(clientId: string, data: Partial<{
     facebook: string;
     website: string;
     radius: number;
+    securityType: string;
 }>) {
     try {
         const doc = await getDoc();
@@ -311,6 +313,7 @@ export async function updateClientRecord(clientId: string, data: Partial<{
         if (data.theme !== undefined && findHeaderFor(keyMap.theme)) row.set(findHeaderFor(keyMap.theme)!, data.theme);
         if (data.venueType !== undefined && findHeaderFor(keyMap.venueType)) row.set(findHeaderFor(keyMap.venueType)!, data.venueType);
         if (data.ownerEmail !== undefined && findHeaderFor(keyMap.ownerEmail)) row.set(findHeaderFor(keyMap.ownerEmail)!, data.ownerEmail);
+        if (data.securityType !== undefined && findHeaderFor(keyMap.securityType)) row.set(findHeaderFor(keyMap.securityType)!, data.securityType);
         if (data.logoUrl !== undefined && findHeaderFor(keyMap.logoUrl)) row.set(findHeaderFor(keyMap.logoUrl)!, data.logoUrl);
         if (data.instagram !== undefined && findHeaderFor(keyMap.instagram)) row.set(findHeaderFor(keyMap.instagram)!, data.instagram);
         if (data.facebook !== undefined && findHeaderFor(keyMap.facebook)) row.set(findHeaderFor(keyMap.facebook)!, data.facebook);

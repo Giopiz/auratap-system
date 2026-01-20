@@ -20,6 +20,7 @@ export default function DashboardPage() {
         clientId: '',
         ssid: '',
         password: '',
+        securityType: 'WPA',
         theme: 'marble',
         venueType: 'cafe',
         ownerEmail: '',
@@ -104,7 +105,7 @@ export default function DashboardPage() {
                 } as WifiCredentials & { clientId: string }]);
 
                 setNewClient({
-                    clientId: '', ssid: '', password: '', theme: 'marble', venueType: 'cafe',
+                    clientId: '', ssid: '', password: '', securityType: 'WPA', theme: 'marble', venueType: 'cafe',
                     ownerEmail: '', lat: '', lng: '', logoUrl: '', instagram: '', facebook: '',
                     website: '', radius: ''
                 });
@@ -202,6 +203,16 @@ export default function DashboardPage() {
                                 <option value="house">House</option>
                                 <option value="gym">Gym</option>
                                 <option value="other">Other</option>
+                            </select>
+
+                            <select
+                                value={newClient.securityType}
+                                onChange={(e) => setNewClient({ ...newClient, securityType: e.target.value as 'WPA' | 'WEP' | 'nopass' })}
+                                className="w-full bg-neutral-900 border border-neutral-700 rounded px-3 py-2 text-sm focus:border-blue-500 outline-none"
+                            >
+                                <option value="WPA">WPA (Standard)</option>
+                                <option value="WEP">WEP (Legacy)</option>
+                                <option value="nopass">None (Open)</option>
                             </select>
 
                             <input

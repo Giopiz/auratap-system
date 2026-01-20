@@ -104,6 +104,8 @@ function mapRowToVenue(row: GoogleSpreadsheetRow): WifiCredentials {
         facebook: getRowValue(row, 'facebook'),
         website: getRowValue(row, 'website'),
         radius: parseCoordinate(getRowValue(row, 'radius')) || 100,
+        primaryColor: getRowValue(row, 'primaryColor'),
+        secondaryColor: getRowValue(row, 'secondaryColor'),
     };
 }
 
@@ -159,6 +161,8 @@ export async function addClientRecord(data: {
     website?: string;
     radius?: number;
     securityType?: string;
+    primaryColor?: string;
+    secondaryColor?: string;
 }) {
     try {
         console.log('[Sheets Server] Attempting to add client:', data.clientId);
@@ -220,6 +224,8 @@ export async function addClientRecord(data: {
         if (findHeaderFor(keyMap.facebook)) rowData[findHeaderFor(keyMap.facebook)!] = data.facebook || '';
         if (findHeaderFor(keyMap.website)) rowData[findHeaderFor(keyMap.website)!] = data.website || '';
         if (findHeaderFor(keyMap.radius)) rowData[findHeaderFor(keyMap.radius)!] = data.radius !== undefined ? String(data.radius) : '';
+        if (findHeaderFor(keyMap.primaryColor)) rowData[findHeaderFor(keyMap.primaryColor)!] = (data as any).primaryColor || '';
+        if (findHeaderFor(keyMap.secondaryColor)) rowData[findHeaderFor(keyMap.secondaryColor)!] = (data as any).secondaryColor || '';
 
         console.log('[Sheets Server] Writing Row Data:', JSON.stringify(rowData));
 
@@ -264,6 +270,8 @@ export async function updateClientRecord(clientId: string, data: Partial<{
     website: string;
     radius: number;
     securityType: string;
+    primaryColor: string;
+    secondaryColor: string;
 }>) {
     try {
         const doc = await getDoc();
@@ -319,6 +327,8 @@ export async function updateClientRecord(clientId: string, data: Partial<{
         if (data.facebook !== undefined && findHeaderFor(keyMap.facebook)) row.set(findHeaderFor(keyMap.facebook)!, data.facebook);
         if (data.website !== undefined && findHeaderFor(keyMap.website)) row.set(findHeaderFor(keyMap.website)!, data.website);
         if (data.radius !== undefined && findHeaderFor(keyMap.radius)) row.set(findHeaderFor(keyMap.radius)!, String(data.radius));
+        if ((data as any).primaryColor !== undefined && findHeaderFor(keyMap.primaryColor)) row.set(findHeaderFor(keyMap.primaryColor)!, (data as any).primaryColor);
+        if ((data as any).secondaryColor !== undefined && findHeaderFor(keyMap.secondaryColor)) row.set(findHeaderFor(keyMap.secondaryColor)!, (data as any).secondaryColor);
 
         // Handle coordinates carefully
         if (data.lat !== undefined && findHeaderFor(keyMap.lat)) {

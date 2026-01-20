@@ -22,7 +22,9 @@ export default function OwnerSetupPage() {
         instagram: '',
         facebook: '',
         securityType: 'WPA' as 'WPA' | 'WEP' | 'nopass',
-        venueType: 'cafe'
+        venueType: 'cafe',
+        primaryColor: '#6366f1',
+        secondaryColor: '#a855f7'
     });
     const [msg, setMsg] = useState('');
 
@@ -47,7 +49,9 @@ export default function OwnerSetupPage() {
                     instagram: found.instagram || '',
                     facebook: found.facebook || '',
                     securityType: found.securityType || 'WPA',
-                    venueType: found.venueType || 'cafe'
+                    venueType: found.venueType || 'cafe',
+                    primaryColor: found.primaryColor || '#6366f1',
+                    secondaryColor: found.secondaryColor || '#a855f7'
                 });
             }
         } catch (err) {
@@ -96,7 +100,9 @@ export default function OwnerSetupPage() {
                     instagram: formData.instagram,
                     facebook: formData.facebook,
                     securityType: formData.securityType,
-                    venueType: formData.venueType
+                    venueType: formData.venueType,
+                    primaryColor: formData.primaryColor,
+                    secondaryColor: formData.secondaryColor
                 })
             });
 
@@ -271,6 +277,53 @@ export default function OwnerSetupPage() {
                             </div>
                         </div>
 
+                        {/* Card Aesthetic Section */}
+                        <div className="bg-black/20 p-4 rounded-xl border border-white/5 space-y-4">
+                            <label className="block text-sm font-bold text-neutral-400 uppercase tracking-widest">
+                                5. Card Aesthetic
+                            </label>
+                            <p className="text-xs text-neutral-500">
+                                Choose two colors to create your custom gradient background.
+                            </p>
+
+                            <div className="grid grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-xs text-neutral-500 block">Primary Color</label>
+                                    <div className="flex items-center gap-3">
+                                        <input
+                                            type="color"
+                                            value={formData.primaryColor}
+                                            onChange={e => setFormData({ ...formData, primaryColor: e.target.value })}
+                                            className="w-12 h-12 rounded cursor-pointer bg-transparent border-none"
+                                        />
+                                        <input
+                                            type="text"
+                                            value={formData.primaryColor}
+                                            onChange={e => setFormData({ ...formData, primaryColor: e.target.value })}
+                                            className="flex-1 bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-xs font-mono"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs text-neutral-500 block">Secondary Color</label>
+                                    <div className="flex items-center gap-3">
+                                        <input
+                                            type="color"
+                                            value={formData.secondaryColor}
+                                            onChange={e => setFormData({ ...formData, secondaryColor: e.target.value })}
+                                            className="w-12 h-12 rounded cursor-pointer bg-transparent border-none"
+                                        />
+                                        <input
+                                            type="text"
+                                            value={formData.secondaryColor}
+                                            onChange={e => setFormData({ ...formData, secondaryColor: e.target.value })}
+                                            className="flex-1 bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-xs font-mono"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <button
                             type="submit"
                             disabled={isSaving}
@@ -306,6 +359,8 @@ export default function OwnerSetupPage() {
                                 instagram: formData.instagram,
                                 facebook: formData.facebook,
                                 venueType: formData.venueType,
+                                primaryColor: formData.primaryColor,
+                                secondaryColor: formData.secondaryColor,
                                 theme: 'marble'
                             }}
                         />

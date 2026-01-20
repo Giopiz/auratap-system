@@ -39,7 +39,7 @@ export async function POST(
     await _context.params;
     try {
         const body = await request.json();
-        const { clientId, ssid, password, theme, venueType, ownerEmail, lat, lng, logoUrl, instagram, facebook, website, radius, securityType } = body;
+        const { clientId, ssid, password, theme, venueType, ownerEmail, lat, lng, logoUrl, instagram, facebook, website, radius, securityType, primaryColor, secondaryColor } = body;
 
         if (!clientId) {
             return NextResponse.json({ error: 'clientId is required' }, { status: 400 });
@@ -59,7 +59,9 @@ export async function POST(
             facebook,
             website,
             radius: radius ? parseFloat(radius) : undefined,
-            securityType
+            securityType,
+            primaryColor,
+            secondaryColor
         });
         return NextResponse.json({ success: true, message: 'Client added successfully' });
 
@@ -83,7 +85,8 @@ export async function PATCH(
         const {
             clientId, ssid, password, theme, venueType,
             ownerEmail, lat, lng, logoUrl, instagram,
-            facebook, website, radius, securityType
+            facebook, website, radius, securityType,
+            primaryColor, secondaryColor
         } = body;
 
         if (!clientId) {
@@ -103,7 +106,9 @@ export async function PATCH(
             facebook,
             website,
             radius: radius !== undefined ? Number(radius) : undefined,
-            securityType
+            securityType,
+            primaryColor,
+            secondaryColor
         });
         return NextResponse.json({ success: true, message: 'Client updated successfully' });
 

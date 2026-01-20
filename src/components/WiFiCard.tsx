@@ -96,8 +96,23 @@ export default function WiFiCard({ credentials }: WiFiCardProps) {
     };
 
     return (
-        <div className="relative z-10 w-full max-w-md p-8 mx-auto overflow-hidden text-center transition-all duration-500 bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl hover:shadow-white/10 group select-none touch-none">
-            <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+        <div
+            className="relative z-10 w-full max-w-md p-8 mx-auto overflow-hidden text-center transition-all duration-500 bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl hover:shadow-white/10 group select-none touch-none"
+            style={{
+                background: credentials.primaryColor && credentials.secondaryColor
+                    ? `linear-gradient(135deg, ${credentials.primaryColor}33, ${credentials.secondaryColor}33)`
+                    : undefined,
+                borderColor: credentials.primaryColor ? `${credentials.primaryColor}44` : undefined
+            }}
+        >
+            <div
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
+                style={{
+                    background: credentials.primaryColor && credentials.secondaryColor
+                        ? `linear-gradient(135deg, ${credentials.primaryColor}55, ${credentials.secondaryColor}55)`
+                        : 'linear-gradient(to bottom right, rgba(255,255,255,0.3), transparent)'
+                }}
+            />
 
             <div className="flex justify-center mb-6">
                 {credentials.logoUrl ? (
@@ -165,6 +180,10 @@ export default function WiFiCard({ credentials }: WiFiCardProps) {
                             ? (credentials.ssid ? 'bg-white text-black hover:bg-neutral-200 shadow-2xl hover:shadow-white/20' : 'bg-neutral-800 text-neutral-500 cursor-not-allowed')
                             : 'bg-green-500 text-white shadow-green-500/50'}
                     `}
+                    style={{
+                        backgroundColor: (status === 'idle' && credentials.ssid && credentials.primaryColor) ? credentials.primaryColor : undefined,
+                        color: (status === 'idle' && credentials.ssid && credentials.primaryColor) ? 'white' : undefined
+                    }}
                 >
                     <span className="relative z-10">
                         {!credentials.ssid && 'AuraTap Offline'}

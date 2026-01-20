@@ -88,7 +88,7 @@ export default function Home() {
               </Link>
 
               <Link
-                href={`/setup/new?lat=${error.split(',')[0].split(':')[1]?.trim() || ''}&lng=${error.split(',')[1]?.trim() || ''}`}
+                href={`/new/setup?lat=${error.split(',')[0].split(':')[1]?.trim() || ''}&lng=${error.split(',')[1]?.trim() || ''}`}
                 className="inline-block px-8 py-4 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 rounded-xl text-emerald-400 text-xs uppercase tracking-[0.2em] transition-all duration-300"
               >
                 Activate This Location

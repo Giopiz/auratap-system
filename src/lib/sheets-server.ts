@@ -197,7 +197,7 @@ export async function addClientRecord(data: {
             ssid: ['ssid', 'wifi', 'network', 'wifiname'],
             password: ['password', 'pass', 'key', 'wifipassword'],
             securityType: ['security', 'sectype'],
-            theme: ['theme', 'style', 'color'],
+            theme: ['theme', 'style', 'palette'],
             venueType: ['venuetype', 'type', 'category'],
             ownerEmail: ['owneremail', 'email', 'contact', 'owner'],
             lat: ['lat', 'latitude'],
@@ -206,7 +206,9 @@ export async function addClientRecord(data: {
             instagram: ['instagram', 'ig', 'insta', 'social1'],
             facebook: ['facebook', 'fb', 'social2'],
             website: ['website', 'site', 'url', 'link'],
-            radius: ['radius', 'range', 'dist', 'distance']
+            radius: ['radius', 'range', 'dist', 'distance'],
+            primaryColor: ['primarycolor', 'color1', 'maincolor'],
+            secondaryColor: ['secondarycolor', 'color2', 'accentcolor']
         };
 
         // Fill the rowData object using the FOUND headers
@@ -298,7 +300,7 @@ export async function updateClientRecord(clientId: string, data: Partial<{
             ssid: ['ssid', 'wifi', 'network', 'wifiname'],
             password: ['password', 'pass', 'key', 'wifipassword'],
             securityType: ['security', 'sectype'],
-            theme: ['theme', 'style', 'color'],
+            theme: ['theme', 'style', 'palette'],
             venueType: ['venuetype', 'type', 'category'],
             ownerEmail: ['owneremail', 'email', 'contact', 'owner'],
             lat: ['lat', 'latitude'],
@@ -307,7 +309,9 @@ export async function updateClientRecord(clientId: string, data: Partial<{
             instagram: ['instagram', 'ig', 'insta', 'social1'],
             facebook: ['facebook', 'fb', 'social2'],
             website: ['website', 'site', 'url', 'link'],
-            radius: ['radius', 'range', 'dist', 'distance']
+            radius: ['radius', 'range', 'dist', 'distance'],
+            primaryColor: ['primarycolor', 'color1', 'maincolor'],
+            secondaryColor: ['secondarycolor', 'color2', 'accentcolor']
         };
 
         const rows = await sheet.getRows();

@@ -79,12 +79,19 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="pt-6">
+            <div className="pt-6 flex flex-col gap-3">
               <Link
                 href="/dashboard"
                 className="inline-block px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/20 rounded-xl text-white text-xs uppercase tracking-[0.2em] transition-all duration-300 hover:scale-105 active:scale-95"
               >
                 Owner Dashboard
+              </Link>
+
+              <Link
+                href={`/setup/new?lat=${error.split(',')[0].split(':')[1]?.trim() || ''}&lng=${error.split(',')[1]?.trim() || ''}`}
+                className="inline-block px-8 py-4 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 rounded-xl text-emerald-400 text-xs uppercase tracking-[0.2em] transition-all duration-300"
+              >
+                Activate This Location
               </Link>
             </div>
 

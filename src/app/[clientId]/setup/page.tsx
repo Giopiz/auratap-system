@@ -3,7 +3,6 @@
 export const dynamic = 'force-dynamic';
 
 import { useState, useEffect } from 'react';
-import { WifiCredentials } from '@/lib/wifi-service';
 import { useParams } from 'next/navigation';
 import WiFiCard from '@/components/WiFiCard';
 
@@ -12,6 +11,7 @@ export default function OwnerSetupPage() {
     const clientId = params?.clientId as string;
 
     const [isSaving, setIsSaving] = useState(false);
+    const [isNew, setIsNew] = useState(false);
     const [formData, setFormData] = useState({
         ssid: '',
         password: '',
@@ -29,33 +29,50 @@ export default function OwnerSetupPage() {
     const [msg, setMsg] = useState('');
 
     useEffect(() => {
-        if (clientId) fetchBrief();
+        // Handle URL params for pre-filling location
+        if (typeof window !== 'undefined') {
+            const search = new URLSearchParams(window.location.search);
+            const lat = search.get('lat');
+            const lng = search.get('lng');
+            if (lat && lng) {
+                setFormData(prev => ({ ...prev, lat, lng }));
+            }
+        }
+
+        if (clientId && clientId !== 'new') fetchBrief();
+        else setIsNew(true);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [clientId]);
 
     const fetchBrief = async () => {
         try {
-            const res = await fetch(`/api/sheets/generic_id/data?t=${Date.now()}`, { cache: 'no-store' });
+            const res = await fetch(`/api/sheets/generic_id/data?clientId=${clientId}&t=${Date.now()}`, { cache: 'no-store' });
             const data = await res.json();
-            const found = data.clients?.find((c: WifiCredentials) => c.clientId === clientId);
-            if (found) {
-                setFormData({
-                    ssid: found.ssid || '',
-                    password: found.password || '',
-                    lat: found.lat ? String(found.lat) : '',
-                    lng: found.lng ? String(found.lng) : '',
-                    logoUrl: found.logoUrl || '',
-                    website: found.website || '',
-                    instagram: found.instagram || '',
-                    facebook: found.facebook || '',
-                    securityType: found.securityType || 'WPA',
-                    venueType: found.venueType || 'cafe',
-                    primaryColor: found.primaryColor || '#6366f1',
-                    secondaryColor: found.secondaryColor || '#a855f7'
-                });
+
+            // If API returns 404 or empty, it's a new registration
+            if (!res.ok || !data.ssid) {
+                setIsNew(true);
+                return;
             }
+
+            setFormData({
+                ssid: data.ssid || '',
+                password: data.password || '',
+                lat: data.lat ? String(data.lat) : formData.lat,
+                lng: data.lng ? String(data.lng) : formData.lng,
+                logoUrl: data.logoUrl || '',
+                website: data.website || '',
+                instagram: data.instagram || '',
+                facebook: data.facebook || '',
+                securityType: data.securityType || 'WPA',
+                venueType: data.venueType || 'cafe',
+                primaryColor: data.primaryColor || '#6366f1',
+                secondaryColor: data.secondaryColor || '#a855f7'
+            });
+            setIsNew(false);
         } catch (err) {
-            console.error(err);
+            console.error('[Setup Fetch Error]:', err);
+            setIsNew(true);
         }
     };
 
@@ -86,28 +103,19 @@ export default function OwnerSetupPage() {
         setMsg('');
 
         try {
+            const method = isNew ? 'POST' : 'PATCH';
             const res = await fetch(`/api/sheets/generic_sheet_id/data`, {
-                method: 'PATCH',
+                method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     clientId,
-                    ssid: formData.ssid,
-                    password: formData.password,
-                    lat: formData.lat,
-                    lng: formData.lng,
-                    logoUrl: formData.logoUrl,
-                    website: formData.website,
-                    instagram: formData.instagram,
-                    facebook: formData.facebook,
-                    securityType: formData.securityType,
-                    venueType: formData.venueType,
-                    primaryColor: formData.primaryColor,
-                    secondaryColor: formData.secondaryColor
+                    ...formData
                 })
             });
 
             if (res.ok) {
-                setMsg('✅ Settings updated successfully!');
+                setMsg(isNew ? '✅ AuraTap activated successfully!' : '✅ Settings updated successfully!');
+                setIsNew(false);
             } else {
                 const err = await res.json();
                 setMsg('❌ Error: ' + err.error);
@@ -128,7 +136,9 @@ export default function OwnerSetupPage() {
                 {/* Form Side */}
                 <div className="bg-neutral-800 border border-neutral-700 rounded-3xl p-8 shadow-2xl">
                     <div className="text-center mb-8">
-                        <h1 className="text-2xl font-bold mb-2">Venue Setup</h1>
+                        <h1 className="text-2xl font-bold mb-2">
+                            {isNew ? 'Activate New Location' : 'Venue Setup'}
+                        </h1>
                         <div className="inline-block bg-green-500/10 text-green-400 px-3 py-1 rounded-full text-xs font-mono">
                             {clientId}
                         </div>
@@ -286,38 +296,68 @@ export default function OwnerSetupPage() {
                                 Choose two colors to create your custom gradient background.
                             </p>
 
-                            <div className="grid grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div className="sm:col-span-2 space-y-3">
+                                    <label className="text-xs text-neutral-500 block font-bold uppercase tracking-widest">Presets</label>
+                                    <div className="flex flex-wrap gap-2 sm:gap-3">
+                                        {[
+                                            { name: 'Classic', p: '#6366f1', s: '#a855f7' },
+                                            { name: 'Sunset', p: '#f87171', s: '#fb923c' },
+                                            { name: 'Ocean', p: '#0ea5e9', s: '#2dd4bf' },
+                                            { name: 'Forest', p: '#10b981', s: '#059669' },
+                                            { name: 'Rose', p: '#f43f5e', s: '#fb7185' },
+                                            { name: 'Midnight', p: '#1e293b', s: '#0f172a' }
+                                        ].map((palette) => (
+                                            <button
+                                                key={palette.name}
+                                                type="button"
+                                                onClick={() => setFormData({ ...formData, primaryColor: palette.p, secondaryColor: palette.s })}
+                                                className={`
+                                                    group relative w-10 h-10 sm:w-12 sm:h-12 rounded-xl border-2 transition-all overflow-hidden
+                                                    ${formData.primaryColor === palette.p && formData.secondaryColor === palette.s ? 'border-white scale-110 shadow-lg' : 'border-white/5 hover:border-white/20'}
+                                                `}
+                                                title={palette.name}
+                                            >
+                                                <div
+                                                    className="absolute inset-0"
+                                                    style={{ background: `linear-gradient(135deg, ${palette.p}, ${palette.s})` }}
+                                                />
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
                                 <div className="space-y-2">
-                                    <label className="text-xs text-neutral-500 block">Primary Color</label>
-                                    <div className="flex items-center gap-3">
+                                    <label className="text-xs text-neutral-500 block">Custom Primary</label>
+                                    <div className="flex items-center gap-3 bg-neutral-900/50 p-2 rounded-lg border border-neutral-700">
                                         <input
                                             type="color"
                                             value={formData.primaryColor}
                                             onChange={e => setFormData({ ...formData, primaryColor: e.target.value })}
-                                            className="w-12 h-12 rounded cursor-pointer bg-transparent border-none"
+                                            className="w-8 h-8 sm:w-10 sm:h-10 rounded cursor-pointer bg-transparent border-none p-0"
                                         />
                                         <input
                                             type="text"
                                             value={formData.primaryColor}
                                             onChange={e => setFormData({ ...formData, primaryColor: e.target.value })}
-                                            className="flex-1 bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-xs font-mono"
+                                            className="flex-1 bg-transparent border-none rounded px-2 py-1 text-xs font-mono outline-none"
                                         />
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs text-neutral-500 block">Secondary Color</label>
-                                    <div className="flex items-center gap-3">
+                                    <label className="text-xs text-neutral-500 block">Custom Secondary</label>
+                                    <div className="flex items-center gap-3 bg-neutral-900/50 p-2 rounded-lg border border-neutral-700">
                                         <input
                                             type="color"
                                             value={formData.secondaryColor}
                                             onChange={e => setFormData({ ...formData, secondaryColor: e.target.value })}
-                                            className="w-12 h-12 rounded cursor-pointer bg-transparent border-none"
+                                            className="w-8 h-8 sm:w-10 sm:h-10 rounded cursor-pointer bg-transparent border-none p-0"
                                         />
                                         <input
                                             type="text"
                                             value={formData.secondaryColor}
                                             onChange={e => setFormData({ ...formData, secondaryColor: e.target.value })}
-                                            className="flex-1 bg-neutral-900 border border-neutral-700 rounded px-2 py-1 text-xs font-mono"
+                                            className="flex-1 bg-transparent border-none rounded px-2 py-1 text-xs font-mono outline-none"
                                         />
                                     </div>
                                 </div>

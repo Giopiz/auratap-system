@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { WifiCredentials } from '@/lib/wifi-service';
 import { QRCodeCanvas } from 'qrcode.react';
 import Image from 'next/image';
@@ -12,24 +12,25 @@ interface WiFiCardProps {
 export default function WiFiCard({ credentials }: WiFiCardProps) {
     const [status, setStatus] = useState<'idle' | 'copying' | 'connected'>('idle');
     const [isIos, setIsIos] = useState(false);
+    const qrRef = useRef<HTMLDivElement>(null);
     const [qrImageData, setQrImageData] = useState<string>('');
+
+    const ssid = credentials.ssid || 'AuraTap Guest';
+    const password = credentials.password || '';
+    const wifiString = `WIFI:S:${ssid};P:${password};T:${credentials.securityType || 'WPA'};;`;
 
     useEffect(() => {
         const ua = window.navigator.userAgent;
         setIsIos(/iPhone|iPad|iPod/i.test(ua));
 
         const timer = setTimeout(() => {
-            const canvas = document.querySelector('canvas');
+            const canvas = qrRef.current?.querySelector('canvas');
             if (canvas) {
                 setQrImageData(canvas.toDataURL('image/png'));
             }
-        }, 300);
+        }, 500);
         return () => clearTimeout(timer);
-    }, []);
-
-    const ssid = credentials.ssid || 'AuraTap Guest';
-    const password = credentials.password || '';
-    const wifiString = `WIFI:S:${ssid};P:${password};T:${credentials.securityType || 'WPA'};;`;
+    }, [wifiString]);
 
     const handleConnect = () => {
         // Copy to clipboard for all - it's the safest fallback
@@ -139,7 +140,7 @@ export default function WiFiCard({ credentials }: WiFiCardProps) {
 
             <div className="mb-8 flex flex-col items-center gap-6">
                 <div className="relative p-4 bg-white rounded-2xl shadow-inner">
-                    <div className="sr-only">
+                    <div className="sr-only" ref={qrRef}>
                         <QRCodeCanvas value={wifiString} size={256} level="H" />
                     </div>
                     {qrImageData ? (
